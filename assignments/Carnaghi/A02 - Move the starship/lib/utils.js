@@ -277,8 +277,8 @@ var utils={
 		var s = Math.sin(adeg);
 
 		out[0] = out[10] = c;
-		out[2] = -s;
-		out[8] = s;
+		out[2] = s;
+		out[8] = -s;
 
 		return out; 
 	},
@@ -403,6 +403,20 @@ var utils={
 		perspective[15] = 0.0;	
 
 		return perspective;
-	}
+	},
 
+	MakeParallel:function(w, a, n, f) {
+	// Creates the parallel projection matrix. The matrix is returned.
+	// {w} contains the horizontal half-width in world units. {a} is the aspect ratio.
+	// {n} is the distance of the near plane, and {f} is the far plane.
+
+		var parallel = this.identityMatrix();
+
+		parallel[0] = 1.0 / w;
+		parallel[5] = a / w;
+		parallel[10] = 2.0 / (n - f);
+		parallel[11] = (n + f) / (n - f);
+
+		return parallel;
+	}
 }

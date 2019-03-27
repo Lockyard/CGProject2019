@@ -39,9 +39,9 @@ function move() {
 			   0.0,		0.0,		0.0,		1.0];
 	
 	
-	//R1 = T110*Rz_15*Ry_15*Rx30*Ry45*Rz15*T_110
+	//R1 = T110*Rz15*Ry45*Rx30*Ry_45*Rz_15*T_110
 	var R1 =  utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(
-				T110, Rz_15), Ry_45), Rx30), Ry45), Rz15), T_110);	
+				T110, Rz15), Ry45), Rx30), Ry_45), Rz_15), T_110);	
 
 //(2)///////////////////////////////////////				
 	// Double the size of an object, using as fixed point (1,1,0)
@@ -88,13 +88,11 @@ function move() {
 			   0.0,		1.0,		0.0,		2.0,
 			   0.0,		0.0,		1.0,		0.0,
 			   0.0,		0.0,		0.0,		1.0];
-			   
-	var I = utils.identityMatrix();
 	
-	//first translate of (-1,-2,0), then rotate of 38 deg on y axis, to align with target plane. Then mirror and reverse rotation and translation
+	//first translate of (-1,-2,0), then rotate of -38 deg on y axis, to align with target plane. Then mirror and reverse rotation and translation
 	//note that is not necessary to translate also on y axis (a translation of (-1, 0, 0) and its reverse would be enough)
 	var S2 = utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(
-				T120, Ry_38), MirXY), Ry38), T_120);
+				T120, Ry38), MirXY), Ry_38), T_120);
 				
 //(4)//////////////////////////////////////////////		   
 	// The ship has been doubled in size, rotated 45 degrees around the x axis, 30 degrees around the y axis, and moved to (1,1,-2). Return the ship in its original position
@@ -103,10 +101,9 @@ function move() {
 					0.0,		0.0,		1.0,		2.0,
 					0.0,		0.0,		0.0,		1.0];
 					
-	//the rotation is actually of -30 degrees, so the inverse is of 30 degrees
-	var Ry30 = [Math.cos(Math.PI/6),	0.0,		Math.sin(Math.PI/6),		0.0,
+	var Ry_30 = [Math.cos(-Math.PI/6),	0.0,		Math.sin(-Math.PI/6),		0.0,
 			   0.0,		1.0,		0.0,		0.0,
-			   -Math.sin(Math.PI/6),		0.0,		Math.cos(Math.PI/6),		0.0,
+			   -Math.sin(-Math.PI/6),		0.0,		Math.cos(-Math.PI/6),		0.0,
 			   0.0,		0.0,		0.0,		1.0];
 	
 	var Rx_45 = [1.0,		0.0,		0.0,		0.0,
@@ -119,8 +116,7 @@ function move() {
 					0.0,		0.0,		0.5,		0.0,
 					0.0,		0.0,		0.0,		1.0];
 	
-	var I1 = utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(S_222, Rx_45), Ry30), T_11m2);
-	//var I1 = utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(T_11m2, Ry_30), Rx_45), S_222);
+	var I1 = utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(S_222, Rx_45), Ry_30), T_11m2);
 
 	return [R1, S1, S2, I1];
 }

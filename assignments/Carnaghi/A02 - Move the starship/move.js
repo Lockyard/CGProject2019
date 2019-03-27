@@ -5,10 +5,10 @@ function move() {
 			   0.0,		0.0,		1.0,		-5.0,
 			   0.0,		0.0,		0.0,		1.0];
 			   
-	// Rotate of 30 degrees on the y axis (note: is -30 degrees)
-	var R1 =  [Math.cos(-Math.PI/6),		0.0,		Math.sin(-Math.PI/6),		0.0, //rotation on y axis of -30 degrees
+	// Rotate of 30 degrees on the y axis
+	var R1 =  [Math.cos(Math.PI/6),		0.0,		Math.sin(Math.PI/6),		0.0, //rotation on y axis of 30 degrees
 			   0.0,		1.0,		0.0,		0.0,
-			   -Math.sin(-Math.PI/6),		0.0,		Math.cos(-Math.PI/6),		0.0,
+			   -Math.sin(Math.PI/6),		0.0,		Math.cos(Math.PI/6),		0.0,
 			   0.0,		0.0,		0.0,		1.0];
 			   
 	// Make the starship 2 times bigger

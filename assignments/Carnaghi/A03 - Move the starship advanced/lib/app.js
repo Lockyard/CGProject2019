@@ -289,7 +289,7 @@ function drawScene() {
 		cz = lookRadius * Math.cos(utils.degToRad(-angle)) * Math.cos(utils.degToRad(-elevation));
 		cx = lookRadius * Math.sin(utils.degToRad(-angle)) * Math.cos(utils.degToRad(-elevation));
 		cy = lookRadius * Math.sin(utils.degToRad(-elevation));
-		viewMatrix = utils.MakeView(cx, cy, cz, elevation, angle);
+		viewMatrix = utils.MakeView(cx, cy, cz, elevation, -angle);
 		projectionMatrix = utils.multiplyMatrices(utils.multiplyMatrices(perspectiveMatrix, viewMatrix),pTransform[curr_sTransform]);
 
 		// sets the uniforms
