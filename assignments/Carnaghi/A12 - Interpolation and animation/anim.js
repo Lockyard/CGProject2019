@@ -3,6 +3,7 @@ var q0, q1, q2, q3, q01, q12, q23, q012, q123, bezierRes;
 const ACOS_THRESHOLD = 0.9995;
 
 const useFormula = false;
+const useQuaternions = true;
 
 function anim(cx, cy, cz, qx, qy, qz, qw, alpha) {
 	// cx, cy, cz are arrays of four points
@@ -22,20 +23,32 @@ function anim(cx, cy, cz, qx, qy, qz, qw, alpha) {
 					0.0,	1.0,	0.0,	y,
 					0.0,	0.0,	1.0,	z,
 					0.0,	0.0,	0.0,	1.0,]
+
+	var rotMat;
+
+	if(useQuaternions) {
+		q0 = new Quaternion(qw[0], qx[0], qy[0], qz[0])
+		q1 = new Quaternion(qw[1], qx[1], qy[1], qz[1])
+		q2 = new Quaternion(qw[2], qx[2], qy[2], qz[2])
+		q3 = new Quaternion(qw[3], qx[3], qy[3], qz[3])
+
+		rotMat = BezierQuaternion(q0, q1, q2, q3, alpha).toMatrix4()
+	} else {
+		//Do interpolation of quaternions.
+		//first extract the 4 quaternions
+		q0 = [qw[0], qx[0], qy[0], qz[0]]
+		q1 = [qw[1], qx[1], qy[1], qz[1]]
+		q2 = [qw[2], qx[2], qy[2], qz[2]]
+		q3 = [qw[3], qx[3], qy[3], qz[3]]
+
+		//perform the slerp (or nlerp depending on which was chosen), and compute the final Bezier result
+		var bezierRes = BezierQuaternionArray(q0, q1, q2, q3, alpha, slerp)
+
+		//transform the 4 array to its quaternion, then to its matrix 4x4
+		rotMat = new Quaternion(bezierRes).toMatrix4()
+	}
+
 	
-
-	//Do interpolation of quaternions.
-	//first extract the 4 quaternions
-	q0 = [qw[0], qx[0], qy[0], qz[0]]
-	q1 = [qw[1], qx[1], qy[1], qz[1]]
-	q2 = [qw[2], qx[2], qy[2], qz[2]]
-	q3 = [qw[3], qx[3], qy[3], qz[3]]
-
-	//perform the slerp (or nlerp depending on which was chosen), and compute the final Bezier result
-	var bezierRes = BezierQuaternion(q0, q1, q2, q3, alpha, slerp)
-
-	//transform the 4 array to its quaternion, then to its matrix 4x4
-	var rotMat = new Quaternion(bezierRes).toMatrix4()
 
 	var out = utils.multiplyMatrices(posMat, rotMat);
 	return out;
@@ -103,13 +116,25 @@ function Bezier3(x0, x1, x2, x3, alpha, useFormula) {
 	
 }
 
-//perform a Bezier curve calculation for quaternions.
+//perform a Bezier curve calculation for quaternions implemented with simple arrays.
 //xlerp is the function to use to do lerp, i.e. slerp or nlerp
-function BezierQuaternion(q0, q1, q2, q3, alpha, xlerp) {
+function BezierQuaternionArray(q0, q1, q2, q3, alpha, xlerp) {
+
 	var q01 = xlerp(q0,q1,alpha)
 	var q12 = xlerp(q1,q2,alpha)
 	var q23 = xlerp(q2,q3,alpha)
 	var q012 = xlerp(q01,q12,alpha)
 	var q123 = xlerp(q12,q23,alpha)
 	return xlerp(q012,q123,alpha)
+
+}
+
+//performs a Bezier curve for quaternions using Quaternions objects
+function BezierQuaternion(q0, q1, q2, q3, alpha) {
+	var q01 = q0.slerp(q1)(alpha)
+	var q12 = q1.slerp(q2)(alpha)
+	var q23 = q2.slerp(q3)(alpha)
+	var q012 = q01.slerp(q12)(alpha)
+	var q123 = q12.slerp(q23)(alpha)
+	return q012.slerp(q123)(alpha)
 }
