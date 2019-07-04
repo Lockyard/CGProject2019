@@ -359,6 +359,7 @@ function computeMatrices(){
 
 
 function drawScene(){
+	updateInput()
 
     computeMatrices();
 
