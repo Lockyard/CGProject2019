@@ -99,7 +99,7 @@ function main(){
         //parse it to retreive objects' data
         //and creates the VBO and IBO from them
         //The vertex format is (x,y,z,nx,ny,nz,u,v)
-        loadModel("Dungeon.diff1.json");
+        loadModel("Dungeon.diff3.json");
 
         //Load shaders' code
         //compile them

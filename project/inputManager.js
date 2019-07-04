@@ -13,6 +13,16 @@ var angle = 90.0;
 var delta = 2.0;
 var camSpeed = PLAYER_SPEED
 
+
+//variables for input control.
+var a_pressed = false;
+var s_pressed = false;
+var d_pressed = false;
+var w_pressed = false;
+
+
+
+//teleport the player (the camera) to the position indicated
 function tp(x, y, z) {
 	cx = x
 	cy = y
