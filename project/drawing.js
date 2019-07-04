@@ -58,14 +58,7 @@ var specularColor   = new Array();
 var diffuseTextureObj 	= new Array();	//Texture material
 var nTexture 		= new Array();	//Number of textures per object
 
-//Parameters for Camera (10/13/36) - -20.-20
-var cx = 10.0;
-var cy = 13.0;
-var cz = 36.0;
-var elevation = -20.0;
-var angle = -20.0;
 
-var delta = 2.0;
 
 // Eye parameters;
 // We need now 4 eye vector, one for each cube
@@ -343,70 +336,6 @@ function loadModel(modelName){
 
 }
 
-
-//TODO restrictions on movements may go here; make smoother controls
-function initInteraction(){
-    var keyFunction =function(e) {
-
-        if (e.keyCode == 37) {	// Left arrow
-            if(moveLight == 0) cx -=delta;
-            else lightPosition[0] -=delta;
-        }
-        if (e.keyCode == 39) {	// Right arrow
-            if(moveLight == 0)cx  +=delta;
-            else lightPosition[0] +=delta;
-        }
-        if (e.keyCode == 38) {	// Up arrow
-            if(moveLight == 0)  cz-=delta;
-            else lightPosition[2] -=delta;
-        }
-        if (e.keyCode == 40) {	// Down arrow
-            if(moveLight == 0)  cz+=delta;
-            else lightPosition[2] +=delta;
-        }
-        if (e.keyCode == 107) {	// Add
-            if(moveLight == 0)  cy+=delta;
-            else lightPosition[1] +=delta;
-        }
-        if (e.keyCode == 109) {	// Subtract
-            if(moveLight == 0)  cy-=delta;
-            else lightPosition[1] -=delta;
-        }
-
-        if (e.keyCode == 65) {	// a
-            if(moveLight == 0)angle-=delta * 10.0;
-            else{
-                lightDirection[0] -= 0.1 * Math.cos(utils.degToRad(angle));
-                lightDirection[2] -= 0.1 * Math.sin(utils.degToRad(angle));
-            }
-        }
-        if (e.keyCode == 68) {	// d
-            if(moveLight == 0)angle+=delta * 10.0;
-            else{
-                lightDirection[0] += 0.1 * Math.cos(utils.degToRad(angle));
-                lightDirection[2] += 0.1 * Math.sin(utils.degToRad(angle));
-            }
-        }
-        if (e.keyCode == 87) {	// w
-            if(moveLight == 0)elevation+=delta * 10.0;
-            else{
-                lightDirection[0] += 0.1 * Math.sin(utils.degToRad(angle));
-                lightDirection[2] -= 0.1 * Math.cos(utils.degToRad(angle));
-            }
-        }
-        if (e.keyCode == 83) {	// s
-            if(moveLight == 0)elevation-=delta*10.0;
-            else{
-                lightDirection[0] -= 0.1 * Math.sin(utils.degToRad(angle));
-                lightDirection[2] += 0.1 * Math.cos(utils.degToRad(angle));
-            }
-        }
-        //console.log(" ("+cx + "/" + cy + "/" + cz + ") - "+ elevation + "." + angle);
-    }
-
-    //'window' is a JavaScript object (if "canvas", it will not work)
-    window.addEventListener("keyup", keyFunction, false);
-}
 
 
 function computeMatrices(){
