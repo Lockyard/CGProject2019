@@ -1,5 +1,9 @@
-//a tile element of the map. it stores its type and the coordinates of its bounds
-//bounds is in form: [north, east, south, west] and are relative coordinates wrt its center
+
+/**
+ * a tile element of the map. it stores its type and the coordinates of its bounds
+ * bounds is in form: [north, east, south, west]
+ * these are relative coordinates wrt its center
+ */
 var Tile = function(type, hasBounds, bounds) {
     this.type = type
     this.hasBounds = hasBounds;
@@ -8,12 +12,12 @@ var Tile = function(type, hasBounds, bounds) {
 
 //Tile.prototype
 
-const WALL = new Tile(1, true, [-0.6,0.6,0.6,-0.6])
+const WALL = new Tile(1, true, [-0.7,0.7,0.7,-0.7])
 const FS = new Tile(0, false, undefined)
 
 var tileMap = {};
-var map0Z = startingPoint[0]
-var map0X = startingPoint[1]
+const map0Z = startingPoint[0]
+const map0X = startingPoint[1]
 
 
 //Actions performed by this js ////////////////////////////////
@@ -26,12 +30,13 @@ setupTileMap()
 
 function setupTileMap() {
     console.log(mapAsterix)
-    for (let i = 0; i < mapAsterix.length; i++) {
+    for (let i = -map0Z; i < mapAsterix.length-map0Z; i++) {
         tileMap[i] = []
-        for (let j = 0; j < mapAsterix[0].length; j++) {
-            tileMap[i][j] = tileFromString(mapAsterix[i][j])
+        for (let j = -map0X; j < mapAsterix[0].length-map0X; j++) {
+            tileMap[i][j] = tileFromString(mapAsterix[i+map0Z][j+map0X])
         }
     }
+    console.log(tileMap)
     //"dispose" the map asterix strings
     mapAsterix = undefined
 }
@@ -59,15 +64,32 @@ function tileFromString(string) {
  * @param {the amount to move on the x axis} amount 
  */
 function moveOnX(currX, currZ, amount) {
-    let i = Math.floor(currZ+map0Z+0.5)
-    let j = Math.floor(currX+map0X+0.5)
-    console.log("move on X. i:"+i+", j:"+j)
-    console.log("getBound on x right: "+Math.min(getBound(1, i, j+1)))
+    let i = Math.floor(currZ+0.5)
+    let j = Math.floor(currX+0.5)
 
     if(amount >= 0) { //going right
-        return Math.min(getBound(1, i, j+1), currX+amount)
+        //if near to the wall, consider also the bound of the near tile (up or down wrt to the next right tile)
+        if(currZ > getBound(0, i+1, j+1)) { //if near to the south wall of the next tile
+            return Math.min(getBound(3, i, j+1), getBound(3, i+1, j+1), currX+amount)
+        } else 
+        if (currZ < getBound(2, i-1, j+1)) { //if near to the north wall of the next tile
+            return Math.min(getBound(3, i, j+1), getBound(3, i-1, j+1), currX+amount)
+        }
+        else {//if not near to the wall, return default bound of the next tile to the right
+            return Math.min(getBound(3, i, j+1), currX+amount)
+        }
+
     } else { //going left
-        return Math.max(getBound(3, i, j-1), currX+amount)
+        //if near to the wall, consider also the bound of the near tile (up or down wrt to the next left tile)
+        if(currZ > getBound(0, i+1, j-1)) { //if near to the south wall of the next tile
+            return Math.max(getBound(1, i, j-1), getBound(1, i+1, j-1), currX+amount)
+        } else 
+        if (currZ < getBound(2, i-1, j-1)) { //if near to the north wall of the next tile
+            return Math.max(getBound(1, i, j-1), getBound(1, i-1, j-1), currX+amount)
+        }
+        else {//if not near to the wall, return default bound of the next tile to the right 
+            return Math.max(getBound(1, i, j-1), currX+amount)
+        }
     }
 }
 
@@ -77,14 +99,32 @@ function moveOnX(currX, currZ, amount) {
  * @param {the amount to move on the x axis} amount 
  */
 function moveOnZ(currX, currZ, amount) {
-    let i = Math.floor(currZ+map0Z+0.5)
-    let j = Math.floor(currX+map0X+0.5)
-    console.log("move on Z. i:"+i+", j:"+j)
+    let i = Math.floor(currZ+0.5)
+    let j = Math.floor(currX+0.5)
 
     if(amount >= 0) { //going down
-        return Math.min(getBound(2, i+1, j), currZ+amount)
+        //if near to the wall, consider also the bound of the near tile (up or down wrt to the next south tile)
+        if(currX > getBound(3, i+1, j+1)) { //if near to the east wall of the next tile
+            return Math.min(getBound(0, i+1, j), getBound(0, i+1, j+1), currZ+amount)
+        } else 
+        if (currX < getBound(1, i+1, j-1)) { //if near to the west wall of the next tile
+            return Math.min(getBound(0, i+1, j), getBound(0, i+1, j-1), currZ+amount)
+        }
+        else {//if not near to the wall, return default bound of the next tile to the right
+            return Math.min(getBound(0, i+1, j), currZ+amount)
+        }
+
     } else { //going up
-        return Math.max(getBound(0, i-1, j), currZ+amount)
+        //if near to the wall, consider also the bound of the near tile (up or down wrt to the next north tile)
+        if(currX > getBound(3, i-1, j+1)) { //if near to the east wall of the next tile
+            return Math.max(getBound(2, i-1, j), getBound(2, i-1, j+1), currZ+amount)
+        } else 
+        if (currX < getBound(1, i-1, j-1)) { //if near to the west wall of the next tile
+            return Math.max(getBound(2, i-1, j), getBound(2, i-1, j-1), currZ+amount)
+        }
+        else {//if not near to the wall, return default bound of the next tile to the right
+            return Math.max(getBound(2, i-1, j), currZ+amount)
+        }
     }
 }
 
@@ -95,24 +135,23 @@ function moveOnZ(currX, currZ, amount) {
  * @param {*} j 
  */
 function getBound(direction, i, j) {
-    console.log("Get bound. dir:"+direction+", i:"+i+", j:"+j)
-    console.log("tileMap[i][j]:")
-    console.log(tileMap[i][j])
     if (tileMap[i][j].hasBounds) {
-        if(direction == 0 || direction == 2)
-            return j+tileMap[i][j].bounds[direction]
-        else
+        if(direction == 0 || direction == 2) {
             return i+tileMap[i][j].bounds[direction]
+        }
+        else {
+            return j+tileMap[i][j].bounds[direction]
+        }
     } else { //if the tile is free give a long bound which is like no bound
         switch (direction) {
             case 0: //north
-                return -1000
+                return 1000
             case 1: //east
-                return 1000
-            case 2: //south
-                return 1000
-            case 3:
                 return -1000
+            case 2: //south
+                return -1000
+            case 3:
+                return 1000
         }
     }
 }

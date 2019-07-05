@@ -1,3 +1,8 @@
+//debug vars
+var v_lock = false;
+var en_cheats = false;
+var skipCnt = 0;
+
 //Parameters for Camera (10/13/36) - -20.-20
 const PLAYER_SPEED = 1.0
 const PLAYER_ANGLE_SENSITIVITY = 10.0
@@ -18,6 +23,7 @@ var camAngSpeed = PLAYER_ANGLE_SENSITIVITY
 
 
 var t = 1, prevT = 1;
+
 
 
 //variables for input control.
@@ -132,6 +138,16 @@ function initInteraction(){
         if (e.keyCode == 40) {  // Down arrow
             da_pressed = false;
         }
+
+        if (e.keyCode == 86) {  //v, for debug
+            v_lock = !v_lock
+            console.log("v_lock enabled:"+v_lock)
+        }
+
+        if (e.keyCode == 66) {  //b, for enabling cheats
+            en_cheats = !en_cheats
+            console.log("cheats enabled:"+en_cheats)
+        }
     }
 
     //'window' is a JavaScript object (if "canvas", it will not work)
@@ -146,15 +162,23 @@ function initInteraction(){
 */
 function increasePosition(amount, direction) {
     let angleR = (angle + direction -90)*degToRad
-    cx += Math.cos(angleR)*amount
-    cz += Math.sin(angleR)*amount
-	//cx = moveOnX(cx, cz, Math.cos(angleR)*amount)
-	//cz = moveOnZ(cx, cz, Math.sin(angleR)*amount)
+    if(en_cheats) {
+        cx += Math.cos(angleR)*amount
+        cz += Math.sin(angleR)*amount
+    } else {
+        cx = moveOnX(cx, cz, Math.cos(angleR)*amount)
+	    cz = moveOnZ(cx, cz, Math.sin(angleR)*amount)
+    }
+	
 }
 
 function updateInput() {
     updateDelta()
-    
+
+    if(skipCnt++ <= 25 && v_lock) {
+        return
+    }
+    skipCnt = 0
 
     if (a_pressed) {  // a
         increasePosition(delta*camSpeed, -90);
