@@ -1,7 +1,5 @@
 //debug vars
-var v_lock = false;
 var en_cheats = false;
-var skipCnt = 0;
 
 //Parameters for Camera (10/13/36) - -20.-20
 const PLAYER_SPEED = 1.0
@@ -139,11 +137,6 @@ function initInteraction(){
             da_pressed = false;
         }
 
-        if (e.keyCode == 86) {  //v, for debug
-            v_lock = !v_lock
-            console.log("v_lock enabled:"+v_lock)
-        }
-
         if (e.keyCode == 66) {  //b, for enabling cheats
             en_cheats = !en_cheats
             console.log("cheats enabled:"+en_cheats)
@@ -175,11 +168,6 @@ function increasePosition(amount, direction) {
 function updateInput() {
     updateDelta()
 
-    if(skipCnt++ <= 25 && v_lock) {
-        return
-    }
-    skipCnt = 0
-
     if (a_pressed) {  // a
         increasePosition(delta*camSpeed, -90);
     }
@@ -192,10 +180,10 @@ function updateInput() {
     if (s_pressed) {  // s
         increasePosition(delta*camSpeed, 180);
     }
-    if (r_pressed) {  // r
+    if (r_pressed && en_cheats) {  // r
         cy+=delta*camSpeed;
     }
-    if (f_pressed) {  // f
+    if (f_pressed && en_cheats) {  // f
         cy-=delta*camSpeed;
     }
 
