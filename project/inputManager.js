@@ -1,19 +1,23 @@
 //Parameters for Camera (10/13/36) - -20.-20
-const PLAYER_SPEED = 0.01
-const PLAYER_ANGLE_SENSITIVITY = 0.07
-const PLAYER_HEIGHT = 0.4 // height of the player (camera y wrt to the ground)
-
+const PLAYER_SPEED = 1.0
+const PLAYER_ANGLE_SENSITIVITY = 10.0
+const PLAYER_HEIGHT = 0.4   // height of the player (camera y wrt to the ground)
+const MIN_DELTA = 0.05      //1/20. the minimum delta of the game (20 fps)
 const degToRad = Math.PI/180.0
 
+//  camera/character coordinates
 var cx = 0.0;
 var cy = PLAYER_HEIGHT
 var cz = 0.0;
 var elevation = 0.0;
 var angle = 90.0;
 
-var delta = 2.0;
+var delta = 1.0;
 var camSpeed = PLAYER_SPEED
 var camAngSpeed = PLAYER_ANGLE_SENSITIVITY
+
+
+var t = 1, prevT = 1;
 
 
 //variables for input control.
@@ -141,12 +145,17 @@ function initInteraction(){
 *	in the specified direction. direction is a number ranging from 0 to 360, clockwise
 */
 function increasePosition(amount, direction) {
-	let angleR = (angle + direction -90)*degToRad
-	cx += Math.cos(angleR)*amount
-	cz += Math.sin(angleR)*amount
+    let angleR = (angle + direction -90)*degToRad
+    cx += Math.cos(angleR)*amount
+    cz += Math.sin(angleR)*amount
+	//cx = moveOnX(cx, cz, Math.cos(angleR)*amount)
+	//cz = moveOnZ(cx, cz, Math.sin(angleR)*amount)
 }
 
 function updateInput() {
+    updateDelta()
+    
+
     if (a_pressed) {  // a
         increasePosition(delta*camSpeed, -90);
     }
@@ -178,6 +187,16 @@ function updateInput() {
     if (da_pressed) {  // Down arrow
         elevation-=delta*10.0 * camAngSpeed;
     }
+}
+
+/**
+ * update delta time since last call of this method.
+ * Delta is capped to the MIN_DELTA constant
+ */
+function updateDelta() {
+    t = Date.now()/1000.0
+    delta = Math.min(t - prevT, MIN_DELTA)
+    prevT = t
 }
 
 //FUNCTIONS USED FOR CHEATS (and debug)//////////////////////////////////////
