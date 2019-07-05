@@ -1,6 +1,10 @@
 /*
+* BALDASSERONI - CARNAGHI
 * Based on last exercise session with model "hogwarts.json"
 * Shading per-pixel (Phong): only "p" shaders used
+* Only ambient light present + point light lantern
+* Ambient light is dim
+* Lantern position is the same as eye position
 */
 
 var canvas;
@@ -18,33 +22,17 @@ var vertexNormalHandle;
 var vertexPositionHandle;
 var vertexUVHandle;
 var textureFileHandle;
-var textureInfluenceHandle;
 var ambientLightInfluenceHandle;
 var ambientLightColorHandle;
 
 var matrixPositionHandle;
 var	materialDiffColorHandle;
-var lightDirectionHandle;
 var lightPositionHandle;
 var lightColorHandle;
-var lightTypeHandle;
 var	eyePositionHandle;
 var materialSpecColorHandle;
 var materialSpecPowerHandle;
 var objectSpecularPower = 20.0;
-
-//TODO set better light parameters + figure camera settings
-//Parameters for light definition (directional light)
-var dirLightAlpha = -utils.degToRad(60);
-var dirLightBeta  = -utils.degToRad(120);
-//Use the Utils 0.2 to use mat3
-var lightDirection = [Math.cos(dirLightAlpha) * Math.cos(dirLightBeta),
-    Math.sin(dirLightAlpha),
-    Math.cos(dirLightAlpha) * Math.sin(dirLightBeta),
-];
-var lightPosition = [0.0, 3.0, 0.0];
-var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
-var moveLight = 0; //0 : move the camera - 1 : Move the lights
 
 var sceneObjects; //total number of nodes
 // The following arrays have sceneObjects as dimension.
@@ -59,18 +47,14 @@ var diffuseTextureObj 	= new Array();	//Texture material
 var nTexture 		= new Array();	//Number of textures per object
 
 
-
-// Eye parameters;
-// We need now 4 eye vector, one for each cube
-// As well as 4 light direction vectors for the same reason
+// Eye parameters
 var observerPositionObj = new Array();
-var lightDirectionObj = new Array();
-var lightPositionObj = new Array();
-
-var currentLightType = 1;
-var textureInfluence = 0.0;
-var ambientLightInfluence = 0.0;
+// Ambient light parameters
+var ambientLightInfluence = 0.2;
 var ambientLightColor = [1.0, 1.0, 1.0, 1.0];
+// Lantern - point light - parameters
+var lightPositionObj = new Array();
+var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
 
 
 
@@ -156,16 +140,13 @@ function loadShaders(){
         materialSpecPowerHandle = gl.getUniformLocation(shaderProgram, 'mSpecPower');
         textureFileHandle = gl.getUniformLocation(shaderProgram, 'textureFile');
 
-        textureInfluenceHandle = gl.getUniformLocation(shaderProgram, 'textureInfluence');
         ambientLightInfluenceHandle = gl.getUniformLocation(shaderProgram, 'ambientLightInfluence');
         ambientLightColorHandle= gl.getUniformLocation(shaderProgram, 'ambientLightColor');
 
         eyePositionHandle = gl.getUniformLocation(shaderProgram, 'eyePosition');
 
-        lightDirectionHandle = gl.getUniformLocation(shaderProgram, 'lightDirection');
         lightPositionHandle = gl.getUniformLocation(shaderProgram, 'lightPosition');
         lightColorHandle = gl.getUniformLocation(shaderProgram, 'lightColor');
-        lightTypeHandle= gl.getUniformLocation(shaderProgram,'lightType');
 
 }
 
@@ -185,7 +166,6 @@ function loadModel(modelName){
             diffuseColor[i] = [1.0, 1.0, 1.0, 1.0];
             specularColor[i] = [1.0, 1.0, 1.0, 1.0];
             observerPositionObj[i] = new Array(3);
-            lightDirectionObj[i] = new Array(3);
             lightPositionObj[i]	= new Array(3);
         }
 
@@ -318,8 +298,7 @@ function loadModel(modelName){
             //creating the objects' world matrix
             objectWorldMatrix[i] = loadedModel.rootnode.children[i].transformation;
 
-            //Correcting the orientation of hogwart
-            //TODO set the correct rotation of the objects
+            //Correcting the orientation of dungeon
             objectWorldMatrix[i] = utils.multiplyMatrices(
                 objectWorldMatrix[i],
                 utils.MakeRotateXMatrix(0));
@@ -342,15 +321,14 @@ function computeMatrices(){
     viewMatrix = utils.MakeView(cx, cy, cz, elevation, angle);
 
     var eyeTemp = [cx, cy, cz];
+    var lanternPos = [cx, cy, cz - 0.1];
 
 
     for(i=0; i < sceneObjects; i++){
         projectionMatrix[i] = utils.multiplyMatrices(viewMatrix, objectWorldMatrix[i]);
         projectionMatrix[i] = utils.multiplyMatrices(perspectiveMatrix, projectionMatrix[i]);
 
-        lightDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), lightDirection);
-
-        lightPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])),lightPosition);
+        lightPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])),lanternPos);
 
         observerPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), eyeTemp);
     }
@@ -359,7 +337,7 @@ function computeMatrices(){
 
 
 function drawScene(){
-	updateInput()
+	updateInput();
 
     computeMatrices();
 
@@ -370,7 +348,6 @@ function drawScene(){
     for(i=0; i < sceneObjects; i++){
         gl.uniformMatrix4fv(matrixPositionHandle, gl.FALSE, utils.transposeMatrix(projectionMatrix[i]));
 
-        gl.uniform1f(textureInfluenceHandle, textureInfluence);
         gl.uniform1f(ambientLightInfluenceHandle, ambientLightInfluence);
 
         gl.uniform1i(textureFileHandle, 0);		//Texture channel 0 used for diff txt
@@ -400,14 +377,9 @@ function drawScene(){
         gl.uniform1f(materialSpecPowerHandle, objectSpecularPower);
 
 
-        gl.uniform3f(lightDirectionHandle, lightDirectionObj[i][0],
-            lightDirectionObj[i][1],
-            lightDirectionObj[i][2]);
         gl.uniform3f(lightPositionHandle, lightPositionObj[i][0],
             lightPositionObj[i][1],
             lightPositionObj[i][2]);
-
-        gl.uniform1i(lightTypeHandle, currentLightType);
 
         gl.uniform3f(eyePositionHandle,	observerPositionObj[i][0],
             observerPositionObj[i][1],
