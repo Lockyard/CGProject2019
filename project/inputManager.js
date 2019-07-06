@@ -1,9 +1,14 @@
 //debug vars
 var en_cheats = false;
 
-//Parameters for Camera (10/13/36) - -20.-20
+//constants for game values. If something is to change it's enough to change it here
 const PLAYER_SPEED = 1.0
+const PLAYER_RUNNING_SPEED = 2.4
+const PLAYER_ANGLE_H_SENSITIVITY = 8.0
+const PLAYER_ANGLE_V_SENSITIVITY = 8.0
 const PLAYER_ANGLE_SENSITIVITY = 10.0
+const MAX_ANGLE_V = 85.0
+const MIN_ANGLE_V = -85.0
 const PLAYER_HEIGHT = 0.4   // height of the player (camera y wrt to the ground)
 const MIN_DELTA = 0.05      //1/20. the minimum delta of the game (20 fps)
 const degToRad = Math.PI/180.0
@@ -19,7 +24,9 @@ var delta = 1.0;
 var camSpeed = PLAYER_SPEED
 var camAngSpeed = PLAYER_ANGLE_SENSITIVITY
 
-
+//increments for the angle of the camera used when input must be updated
+var angleIncrementH = 0, angleIncrementV = 0
+//time vars, used to calculate delta
 var t = 1, prevT = 1;
 
 
@@ -30,8 +37,11 @@ var a_pressed = false;
 var s_pressed = false;
 var d_pressed = false;
 var w_pressed = false;
+
+//for cheats and debug, used to fly
 var r_pressed = false;
 var f_pressed = false;
+
 
 //arrows, l r d u
 var ra_pressed = false;
@@ -45,6 +55,7 @@ var ua_pressed = false;
 function initInteraction(){
     var keyDownFunction = function(e) {
 
+        //wasd
         if (e.keyCode == 65) {	// a
             a_pressed = true;
         }
@@ -57,6 +68,13 @@ function initInteraction(){
         if (e.keyCode == 83) {	// s
             s_pressed = true;
         }
+        //shift
+        if (e.keyCode == 16) { //if shift down, cam speed is the one when player is running
+            camSpeed = PLAYER_RUNNING_SPEED
+        }
+
+
+        //flight for debug/cheat
         if (e.keyCode == 82) {	// r
             r_pressed = true;
         }
@@ -64,6 +82,7 @@ function initInteraction(){
             f_pressed = true;
         }
 
+        //camera controls with arrows
         if (e.keyCode == 37) {	// Left arrow
             la_pressed = true;
         }
@@ -77,6 +96,7 @@ function initInteraction(){
             da_pressed = true;
         }
 
+        //controls for camSpeed
         if (e.keyCode == 80) {  // p
             camSpeed += 0.1
             console.log("Cam Speed: " +camSpeed)
@@ -100,11 +120,12 @@ function initInteraction(){
             camSpeed = 0.01
             console.log("Cam Speed: " +camSpeed)
         }
-        //console.log(" ("+cx + "/" + cy + "/" + cz + ") - "+ elevation + "." + angle);
+        
     }
 
     //when key goes up, button status is no more pressed
     var keyUpFunction = function(e) {
+        //wasd
         if (e.keyCode == 65) {  // a
             a_pressed = false;
         }
@@ -117,6 +138,13 @@ function initInteraction(){
         if (e.keyCode == 83) {  // s
             s_pressed = false;
         }
+        //shift
+        if (e.keyCode == 16) { //if shift up, cam speed becomes the standard speed
+            camSpeed = PLAYER_SPEED
+        }
+
+
+        //flight, debug/cheat
         if (e.keyCode == 82) {  // r
             r_pressed = false;
         }
@@ -124,6 +152,7 @@ function initInteraction(){
             f_pressed = false;
         }
 
+        //camera controls with arrows
         if (e.keyCode == 37) {  // Left arrow
             la_pressed = false;
         }
@@ -137,7 +166,8 @@ function initInteraction(){
             da_pressed = false;
         }
 
-        if (e.keyCode == 66) {  //b, for enabling cheats
+        //b, for enabling cheats
+        if (e.keyCode == 66) {  
             en_cheats = !en_cheats
             console.log("cheats enabled:"+en_cheats)
         }
@@ -168,6 +198,9 @@ function increasePosition(amount, direction) {
 function updateInput() {
     updateDelta()
 
+    updatePlayerVisual()
+
+    //wasd
     if (a_pressed) {  // a
         increasePosition(delta*camSpeed, -90);
     }
@@ -180,6 +213,8 @@ function updateInput() {
     if (s_pressed) {  // s
         increasePosition(delta*camSpeed, 180);
     }
+
+    //flight, if cheats enabled
     if (r_pressed && en_cheats) {  // r
         cy+=delta*camSpeed;
     }
@@ -187,6 +222,7 @@ function updateInput() {
         cy-=delta*camSpeed;
     }
 
+    //camera controls with arrows
     if (la_pressed) {  // Left arrow
         angle-=delta * 10.0 * camAngSpeed;
     }
@@ -210,6 +246,44 @@ function updateDelta() {
     delta = Math.min(t - prevT, MIN_DELTA)
     prevT = t
 }
+
+/**
+ * Update player's camera orientation (aka its visual)
+ */
+function updatePlayerVisual() {
+    //update values of angle and elevation of the total increment accumulated by mouse events since last frame (namely angleIncrementH and V)
+    //angle must be bound from -360 to 360 (actually works either without this, but it's cleaner)
+    angle = (angle + angleIncrementH*delta*PLAYER_ANGLE_H_SENSITIVITY) % 360
+    //elevation must be bound between a max and min elevation to avoid strange character behaviors. Also its increment must be subtracted because 
+    //Y in canvas is positive down
+    elevation = Math.min(   Math.max(elevation - angleIncrementV*delta*PLAYER_ANGLE_V_SENSITIVITY,  MIN_ANGLE_V), MAX_ANGLE_V)
+    
+    //reset increments
+    angleIncrementH = 0
+    angleIncrementV = 0
+
+    document.getElementById('debugstuff').innerText = "angle: " + angle + ", ele: " + elevation
+}
+
+/**
+ * Increment the visual values of the player in the specified directions
+ * @param {Horizontal angle} angleH 
+ * @param {Vertical angle (elevation)} angleV 
+ */
+function incrementPlayerVisual(angleH, angleV) {
+    angleIncrementH += angleH
+    angleIncrementV += angleV
+}
+
+
+
+
+
+
+
+
+
+
 
 //FUNCTIONS USED FOR CHEATS (and debug)//////////////////////////////////////
 

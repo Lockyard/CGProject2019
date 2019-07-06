@@ -1,21 +1,22 @@
 
 /**
- * a tile element of the map. it stores its type and the coordinates of its bounds
+ * a tile element of the map. it stores the coordinates of its bounds
  * bounds is in form: [north, east, south, west]
  * these are relative coordinates wrt its center
  */
-var Tile = function(type, hasBounds, bounds) {
-    this.type = type
+var Tile = function(hasBounds, bounds) {
     this.hasBounds = hasBounds;
     this.bounds = bounds;
 }
 
 //Tile.prototype
 
-const WALL = new Tile(1, true, [-0.7,0.7,0.7,-0.7])
-const FS = new Tile(0, false, undefined)
+const WALL = new Tile(true, [-0.7,0.7,0.7,-0.7])
+const FS = new Tile(false, undefined)
 
 var tileMap = {};
+var doors = []
+var activators = []
 const map0Z = startingPoint[0]
 const map0X = startingPoint[1]
 
@@ -48,9 +49,14 @@ function tileFromString(string) {
             return WALL
         case 'f':
             return FS
-        default:
-            return FS
     }
+
+    if(string.startsWith('d')) { //if it's a door, check parameters
+        let tileArgs = string.split('-')
+        
+    }
+
+    return FS //default last case
 }
 
 
@@ -155,3 +161,4 @@ function getBound(direction, i, j) {
         }
     }
 }
+
