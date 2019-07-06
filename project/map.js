@@ -1,50 +1,10 @@
-
-/**
- * a tile element of the map. it stores the coordinates of its bounds
- * bounds is in form: [north, east, south, west]
- * these are relative coordinates wrt its center
- */
-var Tile = function(hasBounds, bounds) {
-    this.hasBounds = hasBounds;
-    this.bounds = bounds;
-}
-
-
-/**
- * A lever with the specified number (used to activate a certain door) and coordinates
- * x0 is the minimum x coordinate, x1 the maximum. The same for others. These coordinates are used to describe its boundaries (a box)
- * @param {*} number 
- * @param {*} x0 
- * @param {*} x1 
- * @param {*} y0 
- * @param {*} y1 
- * @param {*} z0 
- * @param {*} z1 
- */
-var Lever = function(number, x0, x1, y0, y1, z0, z1) {
-    this.number = number
-    //boundaries: divided in vertical and horizontal. the horizontal define the bottom of the box which is the hitbox of the lever
-    this.x0 = x0
-    this.x1 = x1
-    this.y0 = y0
-    this.y1 = y1
-    this.z0 = z0
-    this.z1 = z1
-    this.isReachable = function(x, y, z, angleH, angleV, reach) {
-        let reachY = Math.sin(degToRad(angleV))*reach
-        let reachH = Math.cos(degToRad(angleV))*reach
-        let reachX = Math.sin(degToRad(angleH))*reachH
-    }
-}
-
-const WALL = new Tile(true, [-0.7,0.7,0.7,-0.7])
-const FS = new Tile(false, undefined)
-
 var tileMap = {};
 var doors = []
-var activators = []
+var levers = []
 const map0Z = startingPoint[0]
 const map0X = startingPoint[1]
+
+const PLAYER_REACH = 0.5 //the distance in which the player can interact with things
 
 
 //Actions performed by this js ////////////////////////////////
@@ -69,26 +29,30 @@ function setupTileMap() {
 }
 
 
-function tileFromString(string) {
-    switch (string) {
-        case 'w':
-            return WALL
-        case 'f':
-            return FS
-    }
-
-    if(string.startsWith('d')) { //if it's a door, check parameters
-        let tileArgs = string.split('-')
-        
-    }
-
-    return FS //default last case
-}
-
-
 
 
 //FUNCTIONS for working with the tileMap
+
+/**
+ * Update the map logic according to delta and player position
+ * @param {*} delta 
+ * @param {player X} pX 
+ * @param {player Y} pY 
+ * @param {player Z} pZ 
+ * @param {player Horizontal Angle} pHA 
+ * @param {player vertical Angle} pVA
+ */
+function updateMap(delta, pX, pY, pZ, pHA, pVA) {
+    for (let i = 0; i < levers.length; i++) {
+        if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
+            document.getElementById("debugElements").innerText = "Lever 5 Reachable!"
+        } else {
+            document.getElementById("debugElements").innerText = ""
+        }
+    }
+}
+
+
 
 /**
  * get the final x position wrt dungeon tiles
@@ -190,18 +154,44 @@ function getBound(direction, i, j) {
 
 /**
  * Load at a logic level some objects based on their model in the overall model
- * @param {the loaded graphical model} objectModel 
+ * @param {the loaded graphical model} loadedModel 
  */
-function loadElementsFromModel(objectModel) {
-    let numObjects = objectModel.meshes.length
+function loadElementsFromModel(loadedModel) {
+    let numObjects = loadedModel.meshes.length
     let oname;
     //analyze each objects
     for (let i = 0; i < numObjects; i++) {
-        oname = loadedModel.rootnode.children[i].nametoLowerCase()
+        oname = loadedModel.rootnode.children[i].name.toLowerCase()
         
         //if it's a lever
-        if(oname.startsWith('lever')) {
-
+        if(oname.startsWith('lever5')) {
+            console.log("lever 5 found! ->"+oname)
+            let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices)
+            levers.push(new Lever(5, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
         }
     }
+}
+
+/**
+ * return an array containing [minX, maxX, minY, maxY, minZ, maxZ] from the given array
+ * assuming that positions modulo 0 are x, mod 1 are y and mod 2 z
+ * 
+ * @param {the array, must be long a multiple of 3} array3x 
+ */
+function getMinMaxAxisBounds(array3x) {
+    let er = array3x.length % 3 //to avoid errors in case of non mul-3 arrays. Still shouldn't happen
+    //array of minMax results. initialized to be overrwitten by any value at first
+    let minMaxA = [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER,Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER,Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]
+    for(let i = 0; i < array3x.length - er; i+=3) {
+        //check max and mins for x
+        if (array3x[i] < minMaxA[0]) minMaxA[0] = array3x[i]
+        else if (array3x[i] > minMaxA[1]) minMaxA[1] = array3x[i]
+        //check max and mins for y
+        if (array3x[i+1] < minMaxA[2]) minMaxA[2] = array3x[i+1]
+        else if (array3x[i+1] > minMaxA[3]) minMaxA[3] = array3x[i+1]
+        //check max and mins for z
+        if (array3x[i+2] < minMaxA[4]) minMaxA[4] = array3x[i+2]
+        else if (array3x[i+2] > minMaxA[5]) minMaxA[5] = array3x[i+2]
+    }
+    return minMaxA
 }

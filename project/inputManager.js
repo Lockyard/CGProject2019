@@ -235,6 +235,10 @@ function updateInput() {
     if (da_pressed) {  // Down arrow
         elevation-=delta*10.0 * camAngSpeed;
     }
+
+    document.getElementById('debugCamInfo').innerText = "cx:"+cx.toFixed(3)+", cy:"+cy.toFixed(3)+", cz:"+cz.toFixed(3)+", angle:" + angle.toFixed(3) + ", ele:" + elevation.toFixed(3)
+
+    updateMap(delta, cx, cy, cz, angle, elevation)
 }
 
 /**
@@ -268,7 +272,6 @@ function updatePlayerVisual() {
     angleIncrementH = 0
     angleIncrementV = 0
 
-    document.getElementById('debugstuff').innerText = "angle: " + angle + ", ele: " + elevation
 }
 
 /**
@@ -282,7 +285,22 @@ function incrementPlayerVisual(angleH, angleV) {
 }
 
 
-
+/**
+ * turn off all inputs
+ */
+function turnOffInputs() {
+    a_pressed = false;
+    s_pressed = false;
+    d_pressed = false;
+    w_pressed = false;
+    r_pressed = false;
+    f_pressed = false;
+    ra_pressed = false;
+    la_pressed = false;
+    da_pressed = false;
+    ua_pressed = false;
+    camSpeed = PLAYER_SPEED
+}
 
 
 

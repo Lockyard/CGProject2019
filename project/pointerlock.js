@@ -21,7 +21,8 @@ function lockChangeAlert() {
       console.log('The pointer lock status is now locked');
       document.addEventListener("mousemove", updatePosition, false);
     } else {
-      console.log('The pointer lock status is now unlocked');  
+      console.log('The pointer lock status is now unlocked'); 
+      turnOffInputs()
       document.removeEventListener("mousemove", updatePosition, false);
     }
   }
