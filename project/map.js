@@ -4,7 +4,7 @@ var levers = []
 const map0Z = startingPoint[0]
 const map0X = startingPoint[1]
 
-const PLAYER_REACH = 0.5 //the distance in which the player can interact with things
+const PLAYER_REACH = 0.7 //the distance in which the player can interact with things
 
 
 //Actions performed by this js ////////////////////////////////
@@ -43,13 +43,14 @@ function setupTileMap() {
  * @param {player vertical Angle} pVA
  */
 function updateMap(delta, pX, pY, pZ, pHA, pVA) {
+    let unreachablelevers = true;
     for (let i = 0; i < levers.length; i++) {
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
-            document.getElementById("debugElements").innerText = "Lever 5 Reachable!"
-        } else {
-            document.getElementById("debugElements").innerText = ""
+            document.getElementById("debugElements").innerText = "Lever "+levers[i].number+" reachable!"
+            unreachablelevers = false
         }
     }
+    if(unreachablelevers) {document.getElementById("debugElements").innerText = ""}
 }
 
 
@@ -164,10 +165,13 @@ function loadElementsFromModel(loadedModel) {
         oname = loadedModel.rootnode.children[i].name.toLowerCase()
         
         //if it's a lever
-        if(oname.startsWith('lever5')) {
-            console.log("lever 5 found! ->"+oname)
+        if(oname.startsWith('lever')) {
+            console.log("lever found! ->"+oname)
+            let leverNum = parseInt(oname.substring(5,6))
+            console.log("lever number: "+leverNum)
             let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices)
-            levers.push(new Lever(5, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
+            levers.push(new Lever(leverNum, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
+            console.log("added lever with bounds: " + bounds)
         }
     }
 }
