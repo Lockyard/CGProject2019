@@ -1,5 +1,5 @@
 //debug vars
-var en_cheats = false;
+var cheatsEnabled = false;
 
 //constants for game values. If something is to change it's enough to change it here
 const PLAYER_SPEED = 1.0
@@ -168,8 +168,8 @@ function initInteraction(){
 
         //b, for enabling cheats
         if (e.keyCode == 66) {  
-            en_cheats = !en_cheats
-            console.log("cheats enabled:"+en_cheats)
+            cheatsEnabled = !cheatsEnabled
+            console.log("cheats enabled:"+cheatsEnabled)
         }
     }
 
@@ -185,7 +185,7 @@ function initInteraction(){
 */
 function increasePosition(amount, direction) {
     let angleR = (angle + direction -90)*degToRad
-    if(en_cheats) {
+    if(cheatsEnabled) {
         cx += Math.cos(angleR)*amount
         cz += Math.sin(angleR)*amount
     } else {
@@ -215,10 +215,10 @@ function updateInput() {
     }
 
     //flight, if cheats enabled
-    if (r_pressed && en_cheats) {  // r
+    if (r_pressed && cheatsEnabled) {  // r
         cy+=delta*camSpeed;
     }
-    if (f_pressed && en_cheats) {  // f
+    if (f_pressed && cheatsEnabled) {  // f
         cy-=delta*camSpeed;
     }
 
@@ -251,12 +251,18 @@ function updateDelta() {
  * Update player's camera orientation (aka its visual)
  */
 function updatePlayerVisual() {
-    //update values of angle and elevation of the total increment accumulated by mouse events since last frame (namely angleIncrementH and V)
-    //angle must be bound from -360 to 360 (actually works either without this, but it's cleaner)
-    angle = (angle + angleIncrementH*delta*PLAYER_ANGLE_H_SENSITIVITY) % 360
-    //elevation must be bound between a max and min elevation to avoid strange character behaviors. Also its increment must be subtracted because 
-    //Y in canvas is positive down
-    elevation = Math.min(   Math.max(elevation - angleIncrementV*delta*PLAYER_ANGLE_V_SENSITIVITY,  MIN_ANGLE_V), MAX_ANGLE_V)
+    if(cheatsEnabled) {
+        angle = (angle + angleIncrementH*delta*PLAYER_ANGLE_H_SENSITIVITY) % 360
+        elevation = elevation - angleIncrementV*delta*PLAYER_ANGLE_V_SENSITIVITY
+    } 
+    else {
+        //update values of angle and elevation of the total increment accumulated by mouse events since last frame (namely angleIncrementH and V)
+        //angle must be bound from -360 to 360 (actually works either without this, but it's cleaner)
+        angle = (angle + angleIncrementH*delta*PLAYER_ANGLE_H_SENSITIVITY) % 360
+        //elevation must be bound between a max and min elevation to avoid strange character behaviors. Also its increment must be subtracted because 
+        //Y in canvas is positive down
+        elevation = Math.min(   Math.max(elevation - angleIncrementV*delta*PLAYER_ANGLE_V_SENSITIVITY,  MIN_ANGLE_V), MAX_ANGLE_V)
+    }
     
     //reset increments
     angleIncrementH = 0
