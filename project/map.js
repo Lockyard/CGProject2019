@@ -9,7 +9,33 @@ var Tile = function(hasBounds, bounds) {
     this.bounds = bounds;
 }
 
-//Tile.prototype
+
+/**
+ * A lever with the specified number (used to activate a certain door) and coordinates
+ * x0 is the minimum x coordinate, x1 the maximum. The same for others. These coordinates are used to describe its boundaries (a box)
+ * @param {*} number 
+ * @param {*} x0 
+ * @param {*} x1 
+ * @param {*} y0 
+ * @param {*} y1 
+ * @param {*} z0 
+ * @param {*} z1 
+ */
+var Lever = function(number, x0, x1, y0, y1, z0, z1) {
+    this.number = number
+    //boundaries: divided in vertical and horizontal. the horizontal define the bottom of the box which is the hitbox of the lever
+    this.x0 = x0
+    this.x1 = x1
+    this.y0 = y0
+    this.y1 = y1
+    this.z0 = z0
+    this.z1 = z1
+    this.isReachable = function(x, y, z, angleH, angleV, reach) {
+        let reachY = Math.sin(degToRad(angleV))*reach
+        let reachH = Math.cos(degToRad(angleV))*reach
+        let reachX = Math.sin(degToRad(angleH))*reachH
+    }
+}
 
 const WALL = new Tile(true, [-0.7,0.7,0.7,-0.7])
 const FS = new Tile(false, undefined)
@@ -162,3 +188,20 @@ function getBound(direction, i, j) {
     }
 }
 
+/**
+ * Load at a logic level some objects based on their model in the overall model
+ * @param {the loaded graphical model} objectModel 
+ */
+function loadElementsFromModel(objectModel) {
+    let numObjects = objectModel.meshes.length
+    let oname;
+    //analyze each objects
+    for (let i = 0; i < numObjects; i++) {
+        oname = loadedModel.rootnode.children[i].nametoLowerCase()
+        
+        //if it's a lever
+        if(oname.startsWith('lever')) {
+
+        }
+    }
+}
