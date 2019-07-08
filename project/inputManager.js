@@ -43,6 +43,9 @@ var s_pressed = false;
 var d_pressed = false;
 var w_pressed = false;
 
+//actions of player
+var e_pressed = false
+
 //for cheats and debug, used to fly
 var r_pressed = false;
 var f_pressed = false;
@@ -78,6 +81,11 @@ function initInteraction(){
             camSpeed = PLAYER_RUNNING_SPEED
         }
 
+        //actions, to do only when user presses the button but not if he holds it (so a check must be done)
+        if (e.keyCode == 69 && e_pressed != true) { // e
+            e_pressed = true
+            playerActionInspect(cx, cy, cz, angle, elevation)
+        }
 
         //flight for debug/cheat
         if (e.keyCode == 82) {	// r
@@ -146,6 +154,10 @@ function initInteraction(){
         //shift
         if (e.keyCode == 16) { //if shift up, cam speed becomes the standard speed
             camSpeed = PLAYER_SPEED
+        }
+
+        if (e.keyCode == 69) {  // e
+            e_pressed = false;
         }
 
 
@@ -298,12 +310,17 @@ function turnOffInputs() {
     s_pressed = false;
     d_pressed = false;
     w_pressed = false;
+
+    e_pressed = false;
+
     r_pressed = false;
     f_pressed = false;
+
     ra_pressed = false;
     la_pressed = false;
     da_pressed = false;
     ua_pressed = false;
+
     camSpeed = PLAYER_SPEED
 }
 

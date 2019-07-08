@@ -50,17 +50,16 @@ function tileFromString(string) {
         //create a door and link this tile
         let door = new Door(parseInt(tileArgs[1]), false, doorTile)
 
-        if(tileArgs[2] === 'v') 
+        if(tileArgs[2] === 'v') {
             doorTile.bounds = V_DOOR_BOUNDARIES
-        else if(tileArgs[2] === 'h')
+        }
+        else if(tileArgs[2] === 'h') {
             doorTile.bounds = H_DOOR_BOUNDARIES
+        }
         else //if its not h or v, discard it and treat it as a free space
             return FS
         //push the doors into the door array, then return the doortile, which is linked to its door
-        console.log("door, doorTile:")
-        console.log(door)
-        console.log(doorTile)
-        doors.push[door]
+        doors.push(door)
         return doorTile
     }
 
@@ -82,6 +81,8 @@ function tileFromString(string) {
  * @param {player vertical Angle} pVA
  */
 function updateMap(delta, pX, pY, pZ, pHA, pVA) {
+
+    //update levers
     let unreachablelevers = true;
     for (let i = 0; i < levers.length; i++) {
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
@@ -90,6 +91,30 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
         }
     }
     if(unreachablelevers) {document.getElementById("debugElements").innerText = ""}
+
+    //update doors
+    for (let i = 0; i < doors.length; i++) {
+        doors[i].update(delta)
+    }
+}
+
+
+/**
+ * perform an inspection action for the player, specifying its position and view
+ * @param {player X} pX 
+ * @param {player Y} pY 
+ * @param {player Z} pZ 
+ * @param {player Horizontal Angle} pHA 
+ * @param {player vertical Angle} pVA
+ */
+function playerActionInspect(pX, pY, pZ, pHA, pVA) {
+    console.log(doors[0].number + ", " +doors[0].asd)
+    for (let i = 0; i < levers.length; i++) {
+        if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
+            levers[i].activate(doors)
+        }
+    }
+    console.log(doors[0].number + ", " +doors[0].asd)
 }
 
 
@@ -275,7 +300,7 @@ function loadElementsFromModel(loadedModel) {
             let leverNum = parseInt(oname.substring(5,6))
             console.log("lever number: "+leverNum)
             let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices)
-            levers.push(new Lever(leverNum, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
+            levers.push(new Lever(leverNum, false, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
             console.log("added lever with bounds: " + bounds)
         }
     }
