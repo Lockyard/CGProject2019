@@ -1,3 +1,8 @@
+/**
+ * map.js contains the logic of the game. includes game elements, their hitboxes and methods to update their behavior
+ */
+
+
 var tileMap = {};
 var doors = []
 var levers = []
@@ -26,6 +31,40 @@ function setupTileMap() {
     console.log(tileMap)
     //"dispose" the map asterix strings
     mapAsterix = undefined
+}
+
+
+function tileFromString(string) {
+    switch (string) {
+        case 'w':
+            return WALL
+        case 'f':
+            return FS
+    }
+
+    if(string.startsWith('d')) { //if it's a door, check parameters
+        //tileargs has in this case 3 params: 1st is d (no more useful), 2nd is the number, 3rd is its orientation
+        let tileArgs = string.split('-')
+        //create a new anonymous tile, which has bounds, to be defined next.
+        let doorTile = new Tile(true, undefined)
+        //create a door and link this tile
+        let door = new Door(parseInt(tileArgs[1]), false, doorTile)
+
+        if(tileArgs[2] === 'v') 
+            doorTile.bounds = V_DOOR_BOUNDARIES
+        else if(tileArgs[2] === 'h')
+            doorTile.bounds = H_DOOR_BOUNDARIES
+        else //if its not h or v, discard it and treat it as a free space
+            return FS
+        //push the doors into the door array, then return the doortile, which is linked to its door
+        console.log("door, doorTile:")
+        console.log(door)
+        console.log(doorTile)
+        doors.push[door]
+        return doorTile
+    }
+
+    return FS //default last case
 }
 
 
@@ -64,31 +103,64 @@ function moveOnX(currX, currZ, amount) {
     let i = Math.floor(currZ+0.5)
     let j = Math.floor(currX+0.5)
 
+    let sameTileBound = sameTileMoveOnX(currX, currZ, i, j, amount)
+
     if(amount >= 0) { //going right
         //if near to the wall, consider also the bound of the near tile (up or down wrt to the next right tile)
         if(currZ > getBound(0, i+1, j+1)) { //if near to the south wall of the next tile
-            return Math.min(getBound(3, i, j+1), getBound(3, i+1, j+1), currX+amount)
+            return Math.min(getBound(3, i, j+1), getBound(3, i+1, j+1), currX+amount, sameTileBound)
         } else 
         if (currZ < getBound(2, i-1, j+1)) { //if near to the north wall of the next tile
-            return Math.min(getBound(3, i, j+1), getBound(3, i-1, j+1), currX+amount)
+            return Math.min(getBound(3, i, j+1), getBound(3, i-1, j+1), currX+amount, sameTileBound)
         }
         else {//if not near to the wall, return default bound of the next tile to the right
-            return Math.min(getBound(3, i, j+1), currX+amount)
+            return Math.min(getBound(3, i, j+1), currX+amount, sameTileBound)
         }
 
     } else { //going left
         //if near to the wall, consider also the bound of the near tile (up or down wrt to the next left tile)
         if(currZ > getBound(0, i+1, j-1)) { //if near to the south wall of the next tile
-            return Math.max(getBound(1, i, j-1), getBound(1, i+1, j-1), currX+amount)
+            return Math.max(getBound(1, i, j-1), getBound(1, i+1, j-1), currX+amount, sameTileBound)
         } else 
         if (currZ < getBound(2, i-1, j-1)) { //if near to the north wall of the next tile
-            return Math.max(getBound(1, i, j-1), getBound(1, i-1, j-1), currX+amount)
+            return Math.max(getBound(1, i, j-1), getBound(1, i-1, j-1), currX+amount, sameTileBound)
         }
         else {//if not near to the wall, return default bound of the next tile to the right 
-            return Math.max(getBound(1, i, j-1), currX+amount)
+            return Math.max(getBound(1, i, j-1), currX+amount, sameTileBound)
         }
     }
 }
+
+/**
+ * Get the final position obtained by moving on x and considering only the bounds on the tile the character is on
+ * @param {current X of character} currX 
+ * @param {current z of character} currZ 
+ * @param {amount moved in x direction (positive/negative)} amount
+ */
+function sameTileMoveOnX(currX, currZ, i, j, amount) {
+    //if the tile has no bounds, return the movement simply of x + amount moved
+    if(!tileMap[i][j].hasBounds)
+        return currX+amount
+    //if going right
+    if(amount >= 0) {
+        //if the movement on x is not obstacled for sure by bounds of the tile, go on
+        if(currX >= getBound(1, i, j) || currZ <= getBound(2, i, j) || currZ >= getBound(0, i, j)) {
+            return currX + amount
+        }
+        else //else return the minimum between the free movement and the obstacled one by the west wall
+            return Math.min(currX + amount, getBound(3, i, j))
+    }
+    //going left 
+    else {
+        //if the movement on x is not obstacled for sure by bounds of the tile, go on
+        if(currX <= getBound(3, i, j) || currZ <= getBound(2, i, j) || currZ >= getBound(0, i, j)) {
+            return currX + amount
+        }
+        else //else return the minimum between the free movement and the obstacled one by the east wall
+            return Math.max(currX + amount, getBound(1, i, j))
+    }
+}
+
 
 /**
  * get the final x position wrt dungeon tiles
@@ -99,31 +171,64 @@ function moveOnZ(currX, currZ, amount) {
     let i = Math.floor(currZ+0.5)
     let j = Math.floor(currX+0.5)
 
+    let sameTileBound = sameTileMoveOnZ(currX, currZ, i, j, amount)
+
     if(amount >= 0) { //going down
         //if near to the wall, consider also the bound of the near tile (up or down wrt to the next south tile)
         if(currX > getBound(3, i+1, j+1)) { //if near to the east wall of the next tile
-            return Math.min(getBound(0, i+1, j), getBound(0, i+1, j+1), currZ+amount)
+            return Math.min(getBound(0, i+1, j), getBound(0, i+1, j+1), currZ+amount, sameTileBound)
         } else 
         if (currX < getBound(1, i+1, j-1)) { //if near to the west wall of the next tile
-            return Math.min(getBound(0, i+1, j), getBound(0, i+1, j-1), currZ+amount)
+            return Math.min(getBound(0, i+1, j), getBound(0, i+1, j-1), currZ+amount, sameTileBound)
         }
         else {//if not near to the wall, return default bound of the next tile to the right
-            return Math.min(getBound(0, i+1, j), currZ+amount)
+            return Math.min(getBound(0, i+1, j), currZ+amount, sameTileBound)
         }
 
     } else { //going up
         //if near to the wall, consider also the bound of the near tile (up or down wrt to the next north tile)
         if(currX > getBound(3, i-1, j+1)) { //if near to the east wall of the next tile
-            return Math.max(getBound(2, i-1, j), getBound(2, i-1, j+1), currZ+amount)
+            return Math.max(getBound(2, i-1, j), getBound(2, i-1, j+1), currZ+amount, sameTileBound)
         } else 
         if (currX < getBound(1, i-1, j-1)) { //if near to the west wall of the next tile
-            return Math.max(getBound(2, i-1, j), getBound(2, i-1, j-1), currZ+amount)
+            return Math.max(getBound(2, i-1, j), getBound(2, i-1, j-1), currZ+amount, sameTileBound)
         }
         else {//if not near to the wall, return default bound of the next tile to the right
-            return Math.max(getBound(2, i-1, j), currZ+amount)
+            return Math.max(getBound(2, i-1, j), currZ+amount, sameTileBound)
         }
     }
 }
+
+/**
+ * Get the final position obtained by moving on z and considering only the bounds on the tile the character is on
+ * @param {current X of character} currX 
+ * @param {current z of character} currZ 
+ * @param {amount moved in x direction (positive/negative)} amount
+ */
+function sameTileMoveOnZ(currX, currZ, i, j, amount) {
+    //if the tile has no bounds, return the movement simply of z + amount moved
+    if(!tileMap[i][j].hasBounds)
+        return currZ+amount
+    //if going down
+    if(amount >= 0) {
+        //if the movement on z is not obstacled for sure by bounds of the tile, go on
+        if(currZ >= getBound(2, i, j) || currX <= getBound(3, i, j) || currX >= getBound(1, i, j)) {
+            return currZ + amount
+        }
+        else //else return the minimum between the free movement and the obstacled one by the north wall
+            return Math.min(currZ + amount, getBound(0, i, j))
+    }
+    //going up
+    else {
+        //if the movement on z is not obstacled for sure by bounds of the tile, go on
+        if(currZ <= getBound(0, i, j) || currX <= getBound(3, i, j) || currX >= getBound(1, i, j)) {
+            return currZ + amount
+        }
+        else //else return the minimum between the free movement and the obstacled one by the south wall
+            return Math.max(currZ + amount, getBound(2, i, j))
+    }
+}
+
 
 /**
  * Returns the bound of the tile in the specified direction in the specified place in the map
