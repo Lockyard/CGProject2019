@@ -1,3 +1,8 @@
+/** 
+ * Input manager. Contains methods for managing the player and its input
+ * 
+ */
+
 //debug vars
 var cheatsEnabled = false;
 
