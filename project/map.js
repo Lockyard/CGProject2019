@@ -10,11 +10,8 @@ const map0X = startingPoint[1]
 
 const PLAYER_REACH = 0.7 //the distance in which the player can interact with things
 
-var doors = []
-var levers = []
-var keys = []
-//player's inventory. contains Item objects
-var inventory = []
+
+
 
 //Actions performed by this js ////////////////////////////////
 setupTileMap()
@@ -86,7 +83,7 @@ function tileFromString(string) {
  */
 function updateMap(delta, pX, pY, pZ, pHA, pVA) {
 
-    //check if levers and keys are reachable (just to print it under canvas, not really useful)
+    //check if levers and keys and stuff are reachable (just to print it under canvas, not really useful)
     let allUnreachables = true;
     for (let i = 0; i < levers.length; i++) {
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
@@ -100,7 +97,14 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
             allUnreachables = false
         }
     }
+    for (let i = 0; i < keyholes.length; i++) {
+        if(keyholes[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
+            document.getElementById("debugElements").innerText = "Keyhole "+keyholes[i].door.number+" reachable!"
+            allUnreachables = false
+        }
+    }
     if(allUnreachables) {document.getElementById("debugElements").innerText = ""}
+    //end of reachables check
 
 
     //update doors
@@ -128,25 +132,19 @@ function playerActionInspect(pX, pY, pZ, pHA, pVA) {
     //pick up keys if in reach
     for (let i = 0; i < keys.length; i++) {
         if(keys[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
-            keys[i].pickUp(inventory)
-            displayInventory()
+            keys[i].pickUp()
+        }
+    }
+
+    //activate keyholes if in reach
+    for (let i = 0; i < keyholes.length; i++) {
+        if(keyholes[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
+            keyholes[i].openUp()
         }
     }
 }
 
-/**
- * Display the inventory in a string in the dedicated div in html
- */
-function displayInventory() {
-    let invString = "Inventory: ["
-    for (let i = 0; i < inventory.length; i++) {
-        invString += inventory[i].itemString()
-        if(i != inventory.length-1)
-            invString += ", "
-    }
-    invString += "]"
-    document.getElementById("inventory").innerText = invString
-}
+
 
 
 
@@ -321,33 +319,53 @@ function getBound(direction, i, j) {
 function loadElementsFromModel(loadedModel) {
     let numObjects = loadedModel.meshes.length
     let oname;
+    let keyholesToBind = []
     //analyze each objects
     for (let i = 0; i < numObjects; i++) {
         oname = loadedModel.rootnode.children[i].name.toLowerCase()
         
         //if it's a lever
         if(oname.startsWith('lever')) {
-            
-            let leverNum = parseInt(oname.substring(5,6))
+            //get the number from the name
+            let leverNum = parseInt(oname.split('_')[0].substring(5))
             console.log("lever found! ->"+oname+ ", number: "+leverNum)
-            let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices)
+            let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices) //calculate bounds
             levers.push(new Lever(leverNum, false, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
             console.log("added lever with bounds: " + bounds)
         }
         //if it's a keyhole
          else if(oname.startsWith('keyhole')) {
-            
+             //find the number and type from the name
+             let khNum = parseInt(oname.split('-')[0].substring(7))
+             let khType = oname.split('-')[1].split('_')[0]
+             console.log("keyhole found! ->"+oname+ ", number: "+khNum + ", type: "+khType)
+             let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices) //calculate bounds
+             let kh = new Keyhole(undefined, false, khType, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5])
+
+             //push the new keyhole in the array of keyholes and in the one used to bind later to it its door, because it could not be in the doors array yet
+             keyholes.push(kh)
+             keyholesToBind.push({keyhole: kh, num: khNum})
         } 
         //if it's a key
         else if(oname.startsWith('key')) {
-            let keyNum = parseInt(oname.substring(3,4))
+            let keyNum = parseInt(oname.split('-')[0].substring(3))
             //extract the key type (copper, etc.) by taking the correct part of the full model name (kinda wierd but that's what we chose as name)
-            let keyType = oname.split('-')[1].split('_')[0] 
-            console.log("key found! ->"+oname+", number: "+keyNum)
+            let keyType = oname.split('-')[1].split('_')[0]
+            console.log("key found! ->"+oname+", number: "+keyNum + ", type: "+keyType)
             let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices)
             keys.push(new Key(keyNum, false, keyType, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
         }
     }
+
+    //at the end, when everything is loaded, bind keyholes to doors
+    for (let i = 0; i < keyholesToBind.length; i++) {
+        for (let j = 0; j < doors.length; j++) {
+            if(keyholesToBind[i].num == doors[j].number) { //if the keyhole's num matches the door's one, bind the keyhole to the door
+                keyholesToBind[i].keyhole.door = doors[j]
+            }
+        }
+    }
+
 }
 
 /**

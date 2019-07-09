@@ -2,6 +2,12 @@
  * mapElements.js contains definitions of elements/objects used in the game logic
  */
 
+var doors = []
+var levers = []
+var keys = []
+var keyholes = []
+ //player's inventory. contains Item objects
+var inventory = []
 
 
 /**
@@ -98,8 +104,15 @@ var Door = function(number, isOpen, tile) {
         if(this.number == activationNumber && this.isOpen) {
             this.isOpen = false
             this.isStill = false
-        }
-            
+        }  
+    }
+
+    /**
+     * Open the door
+     */
+    this.open = function() {
+        this.isOpen = true
+        this.isStill = false
     }
 }
 
@@ -241,7 +254,7 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
      * Pick up the key and put the relative key item in the passed inventory
      * The key is no more pick-uppable after this
      */
-    this.pickUp = function(inventory) {
+    this.pickUp = function() {
         if (this.isPickedUp)
             return
 
@@ -249,6 +262,91 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
         
         //push a new key item in the inventory
         inventory.push(new Item(ITEM_NAME_KEY, this.number, this.type))
+        displayInventory()
+    }
+}
+
+
+/**
+ * A keyhole with the specified number (used to activate a certain door) and coordinates
+ * x0 is the minimum x coordinate, x1 the maximum. The same for others. These coordinates are used to describe its boundaries (a box)
+ * @param {*} number 
+ * @param {if the key has been already picked up} isOpened
+ * @param {The type of the keyhole (copper, etc)} type
+ * @param {the associated door} door
+ * @param {*} x0 
+ * @param {*} x1 
+ * @param {*} y0 
+ * @param {*} y1 
+ * @param {*} z0 
+ * @param {*} z1 
+ */
+var Keyhole = function(door, isOpened, type, x0, x1, y0, y1, z0, z1) {
+    this.isOpened = isOpened || false
+    this.type = type
+    this.door = door
+    //boundaries: divided in vertical and horizontal. the horizontal define the bottom of the box which is the hitbox of the lever
+    this.x0 = x0
+    this.x1 = x1
+    this.y0 = y0
+    this.y1 = y1
+    this.z0 = z0
+    this.z1 = z1
+
+    //check if this key is reachable from given position and angles with a reach length
+    this.isReachable = function(x, y, z, angleH, angleV, reach) {
+        //check on y
+        let reachY = Math.sin(utils.degToRad(angleV))*reach
+        if(reachY >= 0) { //note that y bounds are moved accordingly to the ones of door to which it's attached
+            if(y > this.y1 + this.door.yOpen || (y+reachY) < this.y0 + this.door.yOpen)
+                return false
+        } else {
+            if(y < this.y0 + this.door.yOpen || (y+reachY) > this.y1 + this.door.yOpen)
+                return false
+        }
+
+        //check on x
+        let reachH = Math.cos(utils.degToRad(angleV))*reach
+        let reachX = Math.sin(utils.degToRad(angleH))*reachH
+        if(reachX >= 0) {
+            if(x > this.x1 || (x+reachX) < this.x0)
+                return false
+        } else {
+            if(x < this.x0 || (x+reachX) > this.x1)
+                return false
+        }
+
+        //check on z
+        let reachZ = -Math.cos(utils.degToRad(angleH))*reachH
+        if(reachZ >= 0) {
+            if(z > this.z1 || (z+reachZ) < this.z0)
+                return false
+        } else {
+            if(z < this.z0 || (z+reachZ) > this.z1)
+                return false
+        }
+
+        //if all check passed, then key is reachable
+        return true
+    }
+
+    /**
+     * Open up the key and put the relative key item in the passed inventory
+     * The keyhole is no more openable after this
+     */
+    this.openUp = function() {
+        if (this.isOpened)
+            return
+        //if the key is in the inventory, remove it and open the keyhole. otherwise do nothing
+        for (let i = 0; i < inventory.length; i++) {
+            if(inventory[i].name == ITEM_NAME_KEY && inventory[i].value == this.door.number) {
+                this.isOpened = true
+                this.door.open()
+                inventory.splice(i, 1) //remove the key from inventory
+                displayInventory()
+            }
+        }
+
     }
 }
 
@@ -266,4 +364,19 @@ var Item = function(name, value, type) {
     this.itemString = function itemString() {
         return "("+this.type+" "+this.name+")"
     }
+}
+
+
+/**
+ * Display the inventory in a string in the dedicated div in html
+ */
+function displayInventory() {
+    let invString = "Inventory: ["
+    for (let i = 0; i < inventory.length; i++) {
+        invString += inventory[i].itemString()
+        if(i != inventory.length-1)
+            invString += ", "
+    }
+    invString += "]"
+    document.getElementById("inventory").innerText = invString
 }
