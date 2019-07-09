@@ -4,13 +4,17 @@
 
 
 var tileMap = {};
-var doors = []
-var levers = []
+
 const map0Z = startingPoint[0]
 const map0X = startingPoint[1]
 
 const PLAYER_REACH = 0.7 //the distance in which the player can interact with things
 
+var doors = []
+var levers = []
+var keys = []
+//player's inventory. contains Item objects
+var inventory = []
 
 //Actions performed by this js ////////////////////////////////
 setupTileMap()
@@ -108,13 +112,11 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
  * @param {player vertical Angle} pVA
  */
 function playerActionInspect(pX, pY, pZ, pHA, pVA) {
-    console.log(doors[0].number + ", " +doors[0].asd)
     for (let i = 0; i < levers.length; i++) {
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             levers[i].activate(doors)
         }
     }
-    console.log(doors[0].number + ", " +doors[0].asd)
 }
 
 
@@ -169,16 +171,17 @@ function sameTileMoveOnX(currX, currZ, i, j, amount) {
     //if going right
     if(amount >= 0) {
         //if the movement on x is not obstacled for sure by bounds of the tile, go on
-        if(currX >= getBound(1, i, j) || currZ <= getBound(2, i, j) || currZ >= getBound(0, i, j)) {
+        if(currX >= getBound(1, i, j) || currZ >= getBound(2, i, j) || currZ <= getBound(0, i, j)) {
             return currX + amount
         }
-        else //else return the minimum between the free movement and the obstacled one by the west wall
+        else {//else return the minimum between the free movement and the obstacled one by the west wall
             return Math.min(currX + amount, getBound(3, i, j))
+        }
     }
     //going left 
     else {
         //if the movement on x is not obstacled for sure by bounds of the tile, go on
-        if(currX <= getBound(3, i, j) || currZ <= getBound(2, i, j) || currZ >= getBound(0, i, j)) {
+        if(currX <= getBound(3, i, j) || currZ >= getBound(2, i, j) || currZ <= getBound(0, i, j)) {
             return currX + amount
         }
         else //else return the minimum between the free movement and the obstacled one by the east wall
@@ -253,7 +256,6 @@ function sameTileMoveOnZ(currX, currZ, i, j, amount) {
             return Math.max(currZ + amount, getBound(2, i, j))
     }
 }
-
 
 /**
  * Returns the bound of the tile in the specified direction in the specified place in the map
