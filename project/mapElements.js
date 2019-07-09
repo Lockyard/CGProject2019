@@ -28,6 +28,9 @@ const DOOR_TARGET_Y_CLOSED = 0.0
 const DOOR_OPENING_SPEED = 0.25
 const DOOR_OPEN_RATIO_PASS = 0.5 // the percentage of opening action of the door above which the player can pass through it
 
+//item univoque names
+const ITEM_NAME_KEY = 'key'
+
 /**
  * A door. stores info on its number (is activated by activators with same number), if is open and how much (info useful for animation)
  * also stores the tile on which it's placed, to change its bounds when opened/closed
@@ -68,10 +71,8 @@ var Door = function(number, isOpen, tile) {
         //logically open/close the door when it reaches the right ratio
         if(this.isOpen && openCompletion >= DOOR_OPEN_RATIO_PASS) {
             this.tile.hasBounds = false
-            console.log("opened door " + number)
         } else if (!this.isOpen && openCompletion <= DOOR_OPEN_RATIO_PASS) {
             this.tile.hasBounds = true
-            console.log("closed door " + number)
         }
 
         //if totally opened/closed, stop moving
@@ -132,7 +133,6 @@ var Lever = function(number, isActivated, x0, x1, y0, y1, z0, z1) {
         for (let i = 0; i < doors.length; i++) {
             if(doors[i].number == this.number) {
                 isActivated ? doors[i].openIfNumber(number) : doors[i].closeIfNumber(number)
-                console.log(doors[i].asd)
                 document.getElementById("debugLevers").innerText = "The lever activated door #" + doors[i].number + "!"
             }
         }    
@@ -143,10 +143,10 @@ var Lever = function(number, isActivated, x0, x1, y0, y1, z0, z1) {
         //check on y
         let reachY = Math.sin(utils.degToRad(angleV))*reach
         if(reachY >= 0) {
-            if(y > y1 || (y+reachY) < y0)
+            if(y > this.y1 || (y+reachY) < this.y0)
                 return false
         } else {
-            if(y < y0 || (y+reachY) > y1)
+            if(y < this.y0 || (y+reachY) > this.y1)
                 return false
         }
 
@@ -154,24 +154,116 @@ var Lever = function(number, isActivated, x0, x1, y0, y1, z0, z1) {
         let reachH = Math.cos(utils.degToRad(angleV))*reach
         let reachX = Math.sin(utils.degToRad(angleH))*reachH
         if(reachX >= 0) {
-            if(x > x1 || (x+reachX) < x0)
+            if(x > this.x1 || (x+reachX) < this.x0)
                 return false
         } else {
-            if(x < x0 || (x+reachX) > x1)
+            if(x < this.x0 || (x+reachX) > this.x1)
                 return false
         }
 
         //check on z
         let reachZ = -Math.cos(utils.degToRad(angleH))*reachH
         if(reachZ >= 0) {
-            if(z > z1 || (z+reachZ) < z0)
+            if(z > this.z1 || (z+reachZ) < this.z0)
                 return false
         } else {
-            if(z < z0 || (z+reachZ) > z1)
+            if(z < this.z0 || (z+reachZ) > this.z1)
                 return false
         }
 
         //if all check passed, then lever is reachable
         return true
+    }
+}
+
+/**
+ * A key with the specified number (used to activate a certain door) and coordinates
+ * x0 is the minimum x coordinate, x1 the maximum. The same for others. These coordinates are used to describe its boundaries (a box)
+ * @param {*} number 
+ * @param {if the key has been already picked up} isPickedUp
+ * @param {*} x0 
+ * @param {*} x1 
+ * @param {*} y0 
+ * @param {*} y1 
+ * @param {*} z0 
+ * @param {*} z1 
+ */
+var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
+    this.number = number
+    this.isPickedUp = isPickedUp || false
+    this.type = type
+    //boundaries: divided in vertical and horizontal. the horizontal define the bottom of the box which is the hitbox of the lever
+    this.x0 = x0
+    this.x1 = x1
+    this.y0 = y0
+    this.y1 = y1
+    this.z0 = z0
+    this.z1 = z1
+
+    //check if this key is reachable from given position and angles with a reach length
+    this.isReachable = function(x, y, z, angleH, angleV, reach) {
+        //check on y
+        let reachY = Math.sin(utils.degToRad(angleV))*reach
+        if(reachY >= 0) {
+            if(y > this.y1 || (y+reachY) < this.y0)
+                return false
+        } else {
+            if(y < this.y0 || (y+reachY) > this.y1)
+                return false
+        }
+
+        //check on x
+        let reachH = Math.cos(utils.degToRad(angleV))*reach
+        let reachX = Math.sin(utils.degToRad(angleH))*reachH
+        if(reachX >= 0) {
+            if(x > this.x1 || (x+reachX) < this.x0)
+                return false
+        } else {
+            if(x < this.x0 || (x+reachX) > this.x1)
+                return false
+        }
+
+        //check on z
+        let reachZ = -Math.cos(utils.degToRad(angleH))*reachH
+        if(reachZ >= 0) {
+            if(z > this.z1 || (z+reachZ) < this.z0)
+                return false
+        } else {
+            if(z < this.z0 || (z+reachZ) > this.z1)
+                return false
+        }
+
+        //if all check passed, then key is reachable
+        return true
+    }
+
+    /**
+     * Pick up the key and put the relative key item in the passed inventory
+     * The key is no more pick-uppable after this
+     */
+    this.pickUp = function(inventory) {
+        if (this.isPickedUp)
+            return
+
+        this.isPickedUp = true
+        
+        //push a new key item in the inventory
+        inventory.push(new Item(ITEM_NAME_KEY, this.number, this.type))
+    }
+}
+
+
+/**
+ * A item held by the player
+ * @param {Item's name} name 
+ * @param {Item's value, useful for some type of item} value 
+ */
+var Item = function(name, value, type) {
+    this.name = name
+    this.value = value
+    this.type = type
+
+    this.itemString = function itemString() {
+        return "("+this.type+" "+this.name+")"
     }
 }

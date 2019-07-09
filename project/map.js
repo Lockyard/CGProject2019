@@ -86,15 +86,22 @@ function tileFromString(string) {
  */
 function updateMap(delta, pX, pY, pZ, pHA, pVA) {
 
-    //update levers
-    let unreachablelevers = true;
+    //check if levers and keys are reachable (just to print it under canvas, not really useful)
+    let allUnreachables = true;
     for (let i = 0; i < levers.length; i++) {
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Lever "+levers[i].number+" reachable!"
-            unreachablelevers = false
+            allUnreachables = false
         }
     }
-    if(unreachablelevers) {document.getElementById("debugElements").innerText = ""}
+    for (let i = 0; i < keys.length; i++) {
+        if(keys[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
+            document.getElementById("debugElements").innerText = "Key "+keys[i].number+" reachable!"
+            allUnreachables = false
+        }
+    }
+    if(allUnreachables) {document.getElementById("debugElements").innerText = ""}
+
 
     //update doors
     for (let i = 0; i < doors.length; i++) {
@@ -112,11 +119,33 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
  * @param {player vertical Angle} pVA
  */
 function playerActionInspect(pX, pY, pZ, pHA, pVA) {
+    //activate levers if in reach
     for (let i = 0; i < levers.length; i++) {
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             levers[i].activate(doors)
         }
     }
+    //pick up keys if in reach
+    for (let i = 0; i < keys.length; i++) {
+        if(keys[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
+            keys[i].pickUp(inventory)
+            displayInventory()
+        }
+    }
+}
+
+/**
+ * Display the inventory in a string in the dedicated div in html
+ */
+function displayInventory() {
+    let invString = "Inventory: ["
+    for (let i = 0; i < inventory.length; i++) {
+        invString += inventory[i].itemString()
+        if(i != inventory.length-1)
+            invString += ", "
+    }
+    invString += "]"
+    document.getElementById("inventory").innerText = invString
 }
 
 
@@ -298,12 +327,25 @@ function loadElementsFromModel(loadedModel) {
         
         //if it's a lever
         if(oname.startsWith('lever')) {
-            console.log("lever found! ->"+oname)
+            
             let leverNum = parseInt(oname.substring(5,6))
-            console.log("lever number: "+leverNum)
+            console.log("lever found! ->"+oname+ ", number: "+leverNum)
             let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices)
             levers.push(new Lever(leverNum, false, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
             console.log("added lever with bounds: " + bounds)
+        }
+        //if it's a keyhole
+         else if(oname.startsWith('keyhole')) {
+            
+        } 
+        //if it's a key
+        else if(oname.startsWith('key')) {
+            let keyNum = parseInt(oname.substring(3,4))
+            //extract the key type (copper, etc.) by taking the correct part of the full model name (kinda wierd but that's what we chose as name)
+            let keyType = oname.split('-')[1].split('_')[0] 
+            console.log("key found! ->"+oname+", number: "+keyNum)
+            let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices)
+            keys.push(new Key(keyNum, false, keyType, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
         }
     }
 }
