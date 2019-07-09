@@ -21,7 +21,7 @@
 		]
 		,"children": [
 			{
-				 "name": "CopperKey_Torus.001"
+				 "name": "Key2-Copper_Torus.001"
 				,"transformation": [
 					 1
 					,0
@@ -45,7 +45,7 @@
 				]
 			}
 			,{
-				 "name": "GoldKey_Torus"
+				 "name": "Key4-Gold_Torus"
 				,"transformation": [
 					 1
 					,0
@@ -93,7 +93,7 @@
 				]
 			}
 			,{
-				 "name": "GoldKeyHole4_Torus.003"
+				 "name": "Keyhole4-Gold_Torus.003"
 				,"transformation": [
 					 1
 					,0
@@ -117,7 +117,7 @@
 				]
 			}
 			,{
-				 "name": "CopperKeyHole2_Torus.002"
+				 "name": "Keyhole2-Copper_Torus.002"
 				,"transformation": [
 					 1
 					,0
@@ -108694,16 +108694,16 @@
 				,8.5
 				,-0
 				,7.5
-				,0.495609
+				,0.5
 				,-0
 				,8.5
-				,0.495609
+				,0.5
 				,0
 				,9.5
-				,0.495609
+				,0.5
 				,1
 				,9.5
-				,0.495609
+				,0.5
 				,1
 				,8.5
 			]
