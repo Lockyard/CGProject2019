@@ -15,7 +15,6 @@ const PLAYER_ANGLE_SENSITIVITY = 10.0
 const MAX_ANGLE_V = 85.0
 const MIN_ANGLE_V = -85.0
 const PLAYER_HEIGHT = 0.4   // height of the player (camera y wrt to the ground)
-const MIN_DELTA = 0.05      //1/20. the minimum delta of the game (20 fps)
 const degToRad = Math.PI/180.0
 
 //  camera/character coordinates
@@ -31,8 +30,7 @@ var camAngSpeed = PLAYER_ANGLE_SENSITIVITY
 
 //increments for the angle of the camera used when input must be updated
 var angleIncrementH = 0, angleIncrementV = 0
-//time vars, used to calculate delta
-var t = 1, prevT = 1;
+
 
 
 
@@ -59,7 +57,7 @@ var ua_pressed = false;
 
 
 
-//TODO restrictions on movements may go here; make smoother controls
+
 function initInteraction(){
     var keyDownFunction = function(e) {
 
@@ -213,7 +211,7 @@ function increasePosition(amount, direction) {
 }
 
 function updateInput() {
-    updateDelta()
+    delta = updateDelta()
 
     updatePlayerVisual()
 
@@ -258,15 +256,6 @@ function updateInput() {
     updateMap(delta, cx, cy, cz, angle, elevation)
 }
 
-/**
- * update delta time since last call of this method.
- * Delta is capped to the MIN_DELTA constant
- */
-function updateDelta() {
-    t = Date.now()/1000.0
-    delta = Math.min(t - prevT, MIN_DELTA)
-    prevT = t
-}
 
 /**
  * Update player's camera orientation (aka its visual)

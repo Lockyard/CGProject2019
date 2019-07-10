@@ -57,6 +57,10 @@ var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
 var lightUpObjectHandle;
 var lightUpPercentageHandle;
 
+//time vars, used to calculate delta
+var t = 1, prevT = 1;
+const MIN_DELTA = 0.05      //1/20. the minimum delta of the game (20 fps)
+var delta = 1.0;
 
 
 function main(){
@@ -423,4 +427,15 @@ function requestCORSIfNotSameOrigin(img, url) {
     if ((new URL(url)).origin !== window.location.origin) {
         img.crossOrigin = "";
     }
+}
+
+/**
+ * update delta time since last call of this method.
+ * Delta is capped to the MIN_DELTA constant
+ */
+function updateDelta() {
+    t = Date.now()/1000.0
+    delta = Math.min(t - prevT, MIN_DELTA)
+    prevT = t
+    return delta;
 }

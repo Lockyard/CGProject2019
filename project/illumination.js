@@ -12,9 +12,9 @@ var reachableKey = [false, false];
 var reachableKeyHole = [false, false];
 var carryingKey = [false, false];
 
-var lastUpdateTime = 0;
 var flag = 0;
 var colorInfluence = 0.0;
+var delta = 1.0;
 
 /**
  *  This function will check if the conditions for illuminating a reachable object are met
@@ -40,18 +40,13 @@ function illuminateReachableObjects(i){
 }
 
 function animateObjectLight(){
-    var currentTime = (new Date).getTime();
-    if(lastUpdateTime){
-        var deltaC = (30 * (currentTime - lastUpdateTime)) / 1000.0;
     if (flag == 0)
-        colorInfluence += deltaC/100;
+        colorInfluence += delta/5;
     else
-        colorInfluence -= deltaC/100;
+        colorInfluence -= delta/5;
     if (colorInfluence <= 0.001)
         flag = 0;
     else if (colorInfluence >= 0.150)
         flag = 1;
-    }
-    lastUpdateTime = currentTime;
     return colorInfluence;
 }
