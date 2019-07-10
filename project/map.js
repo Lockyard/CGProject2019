@@ -89,7 +89,9 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Lever "+levers[i].number+" reachable!"
             allUnreachables = false
+            reachableLever[i] = true; //parameter to simplify checks in illumination.js
         }
+        reachableLever[i] = false; //parameter to simplify checks in illumination.js
     }
     for (let i = 0; i < keys.length; i++) {
         if(keys[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
@@ -391,3 +393,4 @@ function getMinMaxAxisBounds(array3x) {
     }
     return minMaxA
 }
+

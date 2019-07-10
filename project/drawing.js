@@ -2,9 +2,6 @@
 * BALDASSERONI - CARNAGHI
 * Based on last exercise session with model "hogwarts.json"
 * Shading per-pixel (Phong): only "p" shaders used
-* Only ambient light present + point light lantern
-* Ambient light is dim
-* Lantern position is the same as eye position
 */
 
 var canvas;
@@ -55,6 +52,10 @@ var ambientLightColor = [1.0, 1.0, 1.0, 1.0];
 // Lantern - point light - parameters
 var lightPositionObj = new Array();
 var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
+
+//Constants for finding specific objects
+var lightUpObjectHandle;
+var lightUpPercentageHandle;
 
 
 
@@ -147,6 +148,10 @@ function loadShaders(){
 
         lightPositionHandle = gl.getUniformLocation(shaderProgram, 'lightPosition');
         lightColorHandle = gl.getUniformLocation(shaderProgram, 'lightColor');
+
+        //lightUpObjectHandle = gl.getAttribLocation(shaderProgram, 'inLightUpObject');
+        lightUpObjectHandle = gl.getUniformLocation(shaderProgram, 'fsLightUpObject');
+        lightUpPercentageHandle = gl.getUniformLocation(shaderProgram, 'lightUpPercentage');
 
 }
 
@@ -348,6 +353,7 @@ function drawScene(){
     gl.useProgram(shaderProgram);
 
     for(i=0; i < sceneObjects; i++){
+
         gl.uniformMatrix4fv(matrixPositionHandle, gl.FALSE, utils.transposeMatrix(projectionMatrix[i]));
 
         gl.uniform1f(ambientLightInfluenceHandle, ambientLightInfluence);
@@ -371,6 +377,7 @@ function drawScene(){
             specularColor[i][1],
             specularColor[i][2],
             specularColor[i][3]);
+
         gl.uniform4f(ambientLightColorHandle, ambientLightColor[0],
             ambientLightColor[1],
             ambientLightColor[2],
@@ -387,6 +394,7 @@ function drawScene(){
             observerPositionObj[i][1],
             observerPositionObj[i][2]);
 
+        illuminateReachableObjects(i); //illumination.js
 
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufferObjectId[i]);
 
@@ -408,6 +416,7 @@ function drawScene(){
 
     window.requestAnimationFrame(drawScene);
 }
+
 
 
 function requestCORSIfNotSameOrigin(img, url) {
