@@ -50,19 +50,14 @@ var nTexture 		= new Array();	//Number of textures per object
 var observerPositionObj = new Array();
 var lightDirectionObj = new Array();
 // Ambient light parameters
-var ambientLightInfluence = 0.2;
+var ambientLightInfluence = 0.1;
 var ambientLightColor = [1.0, 1.0, 1.0, 1.0];
 // Lantern - user's light - parameters
-var currentLightType = 1;
+var currentLightType = 2;
 var lightPositionObj = new Array();
 var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
 //Parameters for light definition (directional light)
-var dirLightAlpha = -utils.degToRad(60);
-var dirLightBeta  = -utils.degToRad(120);
-var lightDirection = [Math.cos(dirLightAlpha) * Math.cos(dirLightBeta),
-    Math.sin(dirLightAlpha),
-    Math.cos(dirLightAlpha) * Math.sin(dirLightBeta),
-];
+var lightDirection = [];
 
 //Constants for finding specific objects
 var lightUpObjectHandle;
@@ -346,8 +341,10 @@ function computeMatrices(){
     viewMatrix = utils.MakeView(cx, cy, cz, elevation, angle);
 
     var eyeTemp = [cx, cy, cz];
-    var lanternPos = [cx, cy, cz - 0.1];
-
+    var lanternPos = [cx, cy, cz];
+    var radAngle = utils.degToRad(angle);
+    var radElev = utils.degToRad(elevation);
+    lightDirection = [Math.sin(radAngle), Math.sin(radElev), -Math.cos(radAngle)];
 
     for(i=0; i < sceneObjects; i++){
         projectionMatrix[i] = utils.multiplyMatrices(viewMatrix, objectWorldMatrix[i]);

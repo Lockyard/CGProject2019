@@ -42,16 +42,19 @@ vec4 lightModel(int lt, vec3 pos) {
 		nLightDir = normalize(lightPosition - pos);
 		lDim = 15.0 / (lLen * lLen);
 	} else if(lt == 2) {				//Spot light
+		float cOut = 0.85;
+		float cIn = 0.99;
 		nLightDir = normalize(lightPosition - pos);
 		lCone = -dot(nLightDir, normalize(lightDirection));
-		if(lCone < 0.5) {
+		if(lCone < cOut) {
 			lDim = 0.0;
-		} else if(lCone > 0.7) {
+		} else if(lCone > cIn) {
 			lDim = 1.0;
 		} else {
-			lDim = (lCone - 0.5) / 0.2;
+			lDim = (lCone - cOut) / (cIn - cOut);
 		}
 	}
+
 	return vec4(nLightDir, lDim);
 }
 
@@ -73,20 +76,20 @@ void main() {
 	//Computing the ambient light contribution
 	//We assume that the ambient color of the object is identical to it diffuse color (including its texture contribution)
 	vec4 ambLight;
-	if(fsLightUpObject > 0.0)
-	ambLight = ambientLightColor * lightUpPercentage;
-		//ambLight = vec4(1.0,1.0,1.0,1.0);
-	else
-		ambLight = diffuseTextureColorMixture * ambientLightColor * ambientLightInfluence;
+	if(fsLightUpObject > 0.0)		ambLight = ambientLightColor * lightUpPercentage;
+	else 							ambLight = diffuseTextureColorMixture * ambientLightColor * ambientLightInfluence;
 
 	if(lightType == 0){
 		outColor = diffuseTextureColorMixture;
 	}else {
-		vec4 diffuse = 0.1 * diffuseTextureColorMixture * lightColor * clamp(dot(nlightDirection, nNormal), 0.0, 1.0) * lightDimension;
+		float diffuseIntensity = 0.5;
+		if(lightType == 1) diffuseIntensity = 0.1;
+		vec4 diffuse = diffuseIntensity * diffuseTextureColorMixture * lightColor * clamp(dot(nlightDirection, nNormal), 0.0, 1.0) * lightDimension;
 
 		//Reflection vector for Phong model
 		vec3 reflection = -reflect(nlightDirection, nNormal);
 		vec4 specular =  mSpecColor * lightColor * pow(clamp(dot(reflection, nEyeDirection), 0.0, 1.0), mSpecPower) * lightDimension;
-		outColor = min(ambLight + diffuse + specular, diffuseTextureColorMixture + vec4(0.7, 0.7, 0.7, 0.1)); //vec4(1.0, 1.0, 1.0, 1.0));
+		outColor = min(ambLight + diffuse + specular, diffuseTextureColorMixture + vec4(0.7, 0.7, 0.7, 0.1));
+		//vec4(1.0, 1.0, 1.0, 1.0));
 	}
 }
