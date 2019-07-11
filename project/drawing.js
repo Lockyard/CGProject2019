@@ -50,10 +50,10 @@ var nTexture 		= new Array();	//Number of textures per object
 var observerPositionObj = new Array();
 var lightDirectionObj = new Array();
 // Ambient light parameters
-var ambientLightInfluence = 0.1;
+var ambientLightInfluence = 0.2;
 var ambientLightColor = [1.0, 1.0, 1.0, 1.0];
 // Lantern - user's light - parameters
-var currentLightType = 2;
+var currentLightType = 1;
 var lightPositionObj = new Array();
 var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
 //Parameters for light definition (directional light)

@@ -82,7 +82,7 @@ void main() {
 	if(lightType == 0){
 		outColor = diffuseTextureColorMixture;
 	}else {
-		float diffuseIntensity = 0.5;
+		float diffuseIntensity = 0.4;
 		if(lightType == 1) diffuseIntensity = 0.1;
 		vec4 diffuse = diffuseIntensity * diffuseTextureColorMixture * lightColor * clamp(dot(nlightDirection, nNormal), 0.0, 1.0) * lightDimension;
 
