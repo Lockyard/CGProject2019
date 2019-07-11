@@ -26,6 +26,8 @@ var matrixPositionHandle;
 var	materialDiffColorHandle;
 var lightPositionHandle;
 var lightColorHandle;
+var lightDirectionHandle;
+var lightTypeHandle;
 var	eyePositionHandle;
 var materialSpecColorHandle;
 var materialSpecPowerHandle;
@@ -46,12 +48,21 @@ var nTexture 		= new Array();	//Number of textures per object
 
 // Eye parameters
 var observerPositionObj = new Array();
+var lightDirectionObj = new Array();
 // Ambient light parameters
 var ambientLightInfluence = 0.2;
 var ambientLightColor = [1.0, 1.0, 1.0, 1.0];
-// Lantern - point light - parameters
+// Lantern - user's light - parameters
+var currentLightType = 1;
 var lightPositionObj = new Array();
 var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
+//Parameters for light definition (directional light)
+var dirLightAlpha = -utils.degToRad(60);
+var dirLightBeta  = -utils.degToRad(120);
+var lightDirection = [Math.cos(dirLightAlpha) * Math.cos(dirLightBeta),
+    Math.sin(dirLightAlpha),
+    Math.cos(dirLightAlpha) * Math.sin(dirLightBeta),
+];
 
 //Constants for finding specific objects
 var lightUpObjectHandle;
@@ -152,6 +163,8 @@ function loadShaders(){
 
         lightPositionHandle = gl.getUniformLocation(shaderProgram, 'lightPosition');
         lightColorHandle = gl.getUniformLocation(shaderProgram, 'lightColor');
+        lightDirectionHandle = gl.getUniformLocation(shaderProgram, 'lightDirection');
+        lightTypeHandle= gl.getUniformLocation(shaderProgram,'lightType');
 
         //lightUpObjectHandle = gl.getAttribLocation(shaderProgram, 'inLightUpObject');
         lightUpObjectHandle = gl.getUniformLocation(shaderProgram, 'fsLightUpObject');
@@ -177,6 +190,7 @@ function loadModel(modelName){
             diffuseColor[i] = [1.0, 1.0, 1.0, 1.0];
             specularColor[i] = [1.0, 1.0, 1.0, 1.0];
             observerPositionObj[i] = new Array(3);
+            lightDirectionObj[i] = new Array(3);
             lightPositionObj[i]	= new Array(3);
         }
 
@@ -339,6 +353,8 @@ function computeMatrices(){
         projectionMatrix[i] = utils.multiplyMatrices(viewMatrix, objectWorldMatrix[i]);
         projectionMatrix[i] = utils.multiplyMatrices(perspectiveMatrix, projectionMatrix[i]);
 
+        lightDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), lightDirection);
+
         lightPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])),lanternPos);
 
         observerPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), eyeTemp);
@@ -389,10 +405,14 @@ function drawScene(){
 
         gl.uniform1f(materialSpecPowerHandle, objectSpecularPower);
 
+        gl.uniform1i(lightTypeHandle, currentLightType);
 
         gl.uniform3f(lightPositionHandle, lightPositionObj[i][0],
             lightPositionObj[i][1],
             lightPositionObj[i][2]);
+        gl.uniform3f(lightDirectionHandle, lightDirectionObj[i][0],
+            lightDirectionObj[i][1],
+            lightDirectionObj[i][2]);
 
         gl.uniform3f(eyePositionHandle,	observerPositionObj[i][0],
             observerPositionObj[i][1],
@@ -427,6 +447,10 @@ function requestCORSIfNotSameOrigin(img, url) {
     if ((new URL(url)).origin !== window.location.origin) {
         img.crossOrigin = "";
     }
+}
+
+function updateLightType(val){
+    currentLightType = parseInt(val);
 }
 
 /**

@@ -46,7 +46,7 @@ function animateObjectLight(){
         colorInfluence -= delta/5;
     if (colorInfluence <= 0.001)
         flag = 0;
-    else if (colorInfluence >= 0.150)
+    else if (colorInfluence >= 0.100)
         flag = 1;
     return colorInfluence;
 }

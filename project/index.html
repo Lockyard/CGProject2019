@@ -5,15 +5,28 @@
     <title>The Shade Lord's Crypt</title>
 </head>
 <body style="background-color: grey;" onLoad="main();">
-            <canvas id="c" width="800" height="600" style="background-color: red;">
-                Your browser does not support the HTML5 canvas element.
-            </canvas>
-            <div id="debugCamInfo"></div>
-            <div id="inventory">Inventory: []</div>
-            <div id="debugElements"></div>
-            <div id="debugLevers"></div>
-            <div id="debugDoors"></div>
-
+    <table>
+        <tr>
+            <td>
+                <canvas id="c" width="800" height="600" style="background-color: red;">
+                    Your browser does not support the HTML5 canvas element.
+                </canvas>
+                <div id="debugCamInfo"></div>
+                <div id="inventory">Inventory: []</div>
+                <div id="debugElements"></div>
+                <div id="debugLevers"></div>
+                <div id="debugDoors"></div>
+            </td>
+            <td>
+                <p><b> Lantern </b></p>
+                <form>
+                    <input type="radio" name="light" id="yesl" onchange="updateLightType(this.value);" value="1" checked> Point Light <br/>
+                    <input type="radio" name="light" onchange="updateLightType(this.value);" value="2" > Spot Light <br/>
+                    <input type="radio" name="light" id="nol" onchange="updateLightType(this.value);" value="0" > [NO Light] <br/>
+                </form>
+            </td>
+        </tr>
+    </table>
             <!--scripts-->
             <script type="text/javascript" src="utils.js"></script>
             <script type="text/javascript" src="illumination.js"></script>
