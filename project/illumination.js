@@ -7,6 +7,13 @@ const OBJ_IS_LEVER_1 = 5;
 const OBJ_IS_LEVER_3 = 6;
 const OBJ_IS_LEVER_5 = 7;
 
+//type of light, the user can switch among these values
+const LIGHT_TYPE_MIN = 0
+const LIGHT_TYPE_MAX = 2
+
+var currentLightType = 1
+
+
 var reachableLever = [false, false, false];
 var reachableKey = [false, false];
 var reachableKeyHole = [false, false];
@@ -50,3 +57,13 @@ function animateObjectLight(){
         flag = 1;
     return colorInfluence;
 }
+
+
+/**
+ * Change the character's light to the next type, in order, from the one available. If reach the max light type, go back to the min one
+ */
+function changeToNextLight() {
+    if(++currentLightType > LIGHT_TYPE_MAX) {
+        currentLightType = LIGHT_TYPE_MIN
+    }
+} 

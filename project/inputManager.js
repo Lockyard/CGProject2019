@@ -107,6 +107,12 @@ function initInteraction(){
             da_pressed = true;
         }
 
+        //light controls
+        if (e.keyCode == 32) {	// Space bar
+            changeToNextLight()
+        }
+
+
         //controls for camSpeed
         if (e.keyCode == 80) {  // p
             camSpeed += 0.1

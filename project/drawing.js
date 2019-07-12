@@ -28,9 +28,15 @@ var lightPositionHandle;
 var lightColorHandle;
 var lightDirectionHandle;
 var lightTypeHandle;
+var lightConeInHandle;
+var lightConeOutHandle;
+var lightDecayHandle;
+var lightTargetHandle;
 var	eyePositionHandle;
+var eyeDirectionHandle
 var materialSpecColorHandle;
 var materialSpecPowerHandle;
+var materialEmitColorHandle;
 var objectSpecularPower = 20.0;
 
 var sceneObjects; //total number of nodes
@@ -42,22 +48,30 @@ var projectionMatrix= new Array();
 var facesNumber		= new Array();
 var diffuseColor 	= new Array();	//diffuse material colors of objs
 var specularColor   = new Array();
+var emitColor       = new Array();
 var diffuseTextureObj 	= new Array();	//Texture material
 var nTexture 		= new Array();	//Number of textures per object
 
 
 // Eye parameters
 var observerPositionObj = new Array();
+var observerDirectionObj = new Array();
 var lightDirectionObj = new Array();
 // Ambient light parameters
 var ambientLightInfluence = 0.2;
 var ambientLightColor = [1.0, 1.0, 1.0, 1.0];
 // Lantern - user's light - parameters
-var currentLightType = 1;
+//var currentLightType = 1; //initialized in illumination
 var lightPositionObj = new Array();
 var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
 //Parameters for light definition (directional light)
 var lightDirection = [];
+var observerDirection = [];
+
+var lightConeIn = 0.7;
+var lightConeOut = 30.0;
+var lightDecay = 1.0
+var lightTarget = 1.0
 
 //Constants for finding specific objects
 var lightUpObjectHandle;
@@ -117,7 +131,7 @@ function main(){
 
 function loadShaders(){
 
-    utils.loadFiles([ shaderDir + 'vs_p.glsl', shaderDir + 'fs_p.glsl' ],
+    utils.loadFiles([ shaderDir + 'vs_ex.glsl', shaderDir + 'fs_ex.glsl' ],
         function(shaderText){
                     var vertexShader = gl.createShader(gl.VERTEX_SHADER);
                     gl.shaderSource(vertexShader, shaderText[0]);
@@ -149,17 +163,23 @@ function loadShaders(){
         materialDiffColorHandle = gl.getUniformLocation(shaderProgram, 'mDiffColor');
         materialSpecColorHandle = gl.getUniformLocation(shaderProgram, 'mSpecColor');
         materialSpecPowerHandle = gl.getUniformLocation(shaderProgram, 'mSpecPower');
+        materialEmitColorHandle = gl.getUniformLocation(shaderProgram, 'mEmitColor');
         textureFileHandle = gl.getUniformLocation(shaderProgram, 'textureFile');
 
         ambientLightInfluenceHandle = gl.getUniformLocation(shaderProgram, 'ambientLightInfluence');
         ambientLightColorHandle= gl.getUniformLocation(shaderProgram, 'ambientLightColor');
 
         eyePositionHandle = gl.getUniformLocation(shaderProgram, 'eyePosition');
+        eyeDirectionHandle = gl.getUniformLocation(shaderProgram, 'eyeDirection');
 
         lightPositionHandle = gl.getUniformLocation(shaderProgram, 'lightPosition');
         lightColorHandle = gl.getUniformLocation(shaderProgram, 'lightColor');
         lightDirectionHandle = gl.getUniformLocation(shaderProgram, 'lightDirection');
-        lightTypeHandle= gl.getUniformLocation(shaderProgram,'lightType');
+        lightTypeHandle = gl.getUniformLocation(shaderProgram,'lightType');
+        lightConeInHandle = gl.getUniformLocation(shaderProgram,'lightConeIn');
+        lightConeOutHandle = gl.getUniformLocation(shaderProgram,'lightConeOut');
+        lightDecayHandle = gl.getUniformLocation(shaderProgram, 'lightDecay');
+        lightTargetHandle = gl.getUniformLocation(shaderProgram, 'lightTarget');
 
         //lightUpObjectHandle = gl.getAttribLocation(shaderProgram, 'inLightUpObject');
         lightUpObjectHandle = gl.getUniformLocation(shaderProgram, 'fsLightUpObject');
@@ -183,8 +203,10 @@ function loadModel(modelName){
             objectWorldMatrix[i] = new utils.identityMatrix();
             projectionMatrix[i] =  new utils.identityMatrix();
             diffuseColor[i] = [1.0, 1.0, 1.0, 1.0];
+            emitColor[i] =  [0.0, 0.0, 0.0, 1.0];
             specularColor[i] = [1.0, 1.0, 1.0, 1.0];
             observerPositionObj[i] = new Array(3);
+            observerDirectionObj[i] = new Array(3);
             lightDirectionObj[i] = new Array(3);
             lightPositionObj[i]	= new Array(3);
         }
@@ -207,10 +229,12 @@ function loadModel(modelName){
             var UVFileNamePropertyIndex = -1;
             var diffuseColorPropertyIndex = -1;
             var specularColorPropertyIndex = -1;
+            var emitColorPropertyIndex = -1;
             for (n = 0; n < loadedModel.materials[meshMatIndex].properties.length; n++){
                 if(loadedModel.materials[meshMatIndex].properties[n].key == "$tex.file") UVFileNamePropertyIndex = n;
                 if(loadedModel.materials[meshMatIndex].properties[n].key == "$clr.diffuse") diffuseColorPropertyIndex = n;
                 if(loadedModel.materials[meshMatIndex].properties[n].key == "$clr.specular") specularColorPropertyIndex = n;
+                if(loadedModel.materials[meshMatIndex].properties[n].key == "$clr.emissive") emitColorPropertyIndex = n;
             }
 
 
@@ -289,7 +313,16 @@ function loadModel(modelName){
 
             diffuseColor[i].push(1.0);													// Alpha value added
 
+            emitColor[i] = loadedModel.materials[meshMatIndex].properties[emitColorPropertyIndex].value;
+            // Alpha value added if not already in
+            if(emitColor[i][3] === undefined)                                           
+                emitColor[i].push(1.0)
+            console.log("Emit: "+ emitColor[i]);
+
             specularColor[i] = loadedModel.materials[meshMatIndex].properties[specularColorPropertyIndex].value;
+            // Alpha value added if not already in
+            if(specularColor[i][3] === undefined)
+                specularColor[i].push(1.0)
             console.log("Specular: "+ specularColor[i]);
 
             //vertices, normals and UV set 1
@@ -344,7 +377,10 @@ function computeMatrices(){
     var lanternPos = [cx, cy, cz];
     var radAngle = utils.degToRad(angle);
     var radElev = utils.degToRad(elevation);
-    lightDirection = [Math.sin(radAngle), Math.sin(radElev), -Math.cos(radAngle)];
+    //light direction, 3 components of the direction, normalized
+    lightDirection = [-Math.sin(radAngle)*Math.cos(radElev), -Math.sin(radElev), Math.cos(radAngle)*Math.cos(radElev)];
+    //in our case the observer direction is the same as the fp light
+    observerDirection = lightDirection;
 
     for(i=0; i < sceneObjects; i++){
         projectionMatrix[i] = utils.multiplyMatrices(viewMatrix, objectWorldMatrix[i]);
@@ -355,6 +391,8 @@ function computeMatrices(){
         lightPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])),lanternPos);
 
         observerPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), eyeTemp);
+
+        observerDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), observerDirection);
     }
 
 }
@@ -389,6 +427,11 @@ function drawScene(){
             diffuseColor[i][1],
             diffuseColor[i][2],
             diffuseColor[i][3]);
+        
+        gl.uniform4f(materialEmitColorHandle, emitColor[i][0],
+            emitColor[i][1],
+            emitColor[i][2],
+            emitColor[i][3]);
 
         gl.uniform4f(materialSpecColorHandle, specularColor[i][0],
             specularColor[i][1],
@@ -407,13 +450,26 @@ function drawScene(){
         gl.uniform3f(lightPositionHandle, lightPositionObj[i][0],
             lightPositionObj[i][1],
             lightPositionObj[i][2]);
+        
+
         gl.uniform3f(lightDirectionHandle, lightDirectionObj[i][0],
             lightDirectionObj[i][1],
             lightDirectionObj[i][2]);
+        
+        gl.uniform1f(lightConeInHandle, lightConeIn);
+        gl.uniform1f(lightConeOutHandle, lightConeOut);
+
+        gl.uniform1f(lightDecayHandle, lightDecay);
+        gl.uniform1f(lightTargetHandle, lightTarget);
+
 
         gl.uniform3f(eyePositionHandle,	observerPositionObj[i][0],
             observerPositionObj[i][1],
             observerPositionObj[i][2]);
+
+        gl.uniform3f(eyeDirectionHandle,	observerDirectionObj[i][0],
+            observerDirectionObj[i][1],
+            observerDirectionObj[i][2]);
 
         illuminateReachableObjects(i); //illumination.js
 
