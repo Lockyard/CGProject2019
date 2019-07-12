@@ -15,6 +15,8 @@ const CONE_OUT_MAX = 70
 const CONE_OUT_MIN = 5
 const CONE_IN_MAX = 1.0
 const CONE_IN_MIN = 0.0
+const LIGHT_TARGET_MIN = 0.2
+const LIGHT_TARGET_MAX = 10.0
 
 var lightConeIn = 0.7;
 var lightConeOut = 30.0;

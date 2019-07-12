@@ -13,11 +13,26 @@
                 </canvas>
                 <div id="debugCamInfo"></div>
                 <div id="inventory">Inventory: []</div>
+                <div id="currentLightInfo">Current Light: Spotlight</div>
                 <div id="debugElements"></div>
                 <div id="debugLevers"></div>
                 <div id="debugDoors"></div>
             </td>
             <td>
+                <h3>Commands:</h3>
+                <p> <b><i>GENERAL:</i></b>
+                    -<b>WASD:</b> player movement<br>
+                    -<b>Mouse/arrows:</b> move player view<br>
+                    -<b>E:</b> interact with items/objects<br>
+                    -<b>Shift:</b> run<br>
+                    <b><i>LIGHTS:</i></b>
+                    -<b>Mouse Wheel:</b> change cone of spotlight (w.out shift: cone-out, w. shift:cone-in)<br>
+                    -<b>O-P:</b> change torch target distance<br>
+                    -<b>Space bar:</b> change type of light carried by the player (TODO)<br>
+                    <b><i>CHEATS:</i></b>
+                    -<b>B:</b> enable cheats (walk through anything, plus can use cheats commands)<br>
+                    -<b>R-F:</b> move up and down<br>
+                </p>
                 <p><b> Lantern </b></p>
                 <form>
                     <input type="radio" name="light" id="pointl" onchange="updateLightType(this.value);" value="1" checked> Point Light <br/>

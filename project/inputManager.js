@@ -59,6 +59,9 @@ var ua_pressed = false;
 
 //others
 var shift_pressed = false;
+//for light parameters control
+var p_pressed = false
+var o_pressed = false
 
 
 
@@ -114,33 +117,30 @@ function initInteraction(){
         }
 
         //light controls
-        if (e.keyCode == 32) {	// Space bar
+        if (e.keyCode == 32) {	// Space bar, change light type
             changeToNextLight()
         }
+        //change light target value 
+        if (e.keyCode == 80) {  // p
+            p_pressed = true
+        }
+        if (e.keyCode == 79) {  // o
+            o_pressed = true
+        }
+
+
 
 
         //controls for camSpeed
-        if (e.keyCode == 80) {  // p
-            camSpeed += 0.1
-            console.log("Cam Speed: " +camSpeed)
-        }
-        if (e.keyCode == 79) {  // o, cam speed default for moving around
-           camSpeed = 1.0
-           console.log("Cam Speed: " +camSpeed)
-        }
-        if (e.keyCode == 73) {  // i
-            camSpeed -= 0.1
-            console.log("Cam Speed: " +camSpeed)
-        }
         if (e.keyCode == 75) {  // k , player speed
-            camSpeed = PLAYER_SPEED
+            camSpeed += 0.5
             console.log("Cam Speed: " +camSpeed)
         }
         if(e.keyCode == 76) {   //l, log coordinates of camera
             console.log("Cam position (X,Y,Z)(a,e): ("+cx+","+cy+","+cz+")("+angle+","+elevation+")")
         }
         if(e.keyCode == 74) {   //j, precision speed
-            camSpeed = 0.01
+            camSpeed -= 0.5
             console.log("Cam Speed: " +camSpeed)
         }
         
@@ -167,8 +167,17 @@ function initInteraction(){
             shift_pressed = false
         }
 
+        //inspect
         if (e.keyCode == 69) {  // e
             e_pressed = false;
+        }
+
+        //change light target value 
+        if (e.keyCode == 80) {  // p
+            p_pressed = false
+        }
+        if (e.keyCode == 79) {  // o
+            o_pressed = false
         }
 
 
@@ -244,6 +253,7 @@ function updateInput() {
         increasePosition(delta*camSpeed, 180);
     }
 
+
     //flight, if cheats enabled
     if (r_pressed && cheatsEnabled) {  // r
         cy+=delta*camSpeed;
@@ -251,6 +261,7 @@ function updateInput() {
     if (f_pressed && cheatsEnabled) {  // f
         cy-=delta*camSpeed;
     }
+
 
     //camera controls with arrows
     if (la_pressed) {  // Left arrow
@@ -310,6 +321,11 @@ function incrementPlayerVisual(angleH, angleV) {
  * Update parameters for the light controlled by the player
  */
 function updateControlledLightParams() {
+    if(o_pressed)
+        lightTarget = utils.clamp(lightTarget - 0.25, LIGHT_TARGET_MIN, LIGHT_TARGET_MAX)
+    else if (p_pressed)
+        lightTarget = utils.clamp(lightTarget + 0.25, LIGHT_TARGET_MIN, LIGHT_TARGET_MAX)
+
     lightConeOut = utils.clamp(lightConeOut + coneOutIncrement, CONE_OUT_MIN, CONE_OUT_MAX)
     lightConeIn  = utils.clamp(lightConeIn + coneInIncrement, CONE_IN_MIN, CONE_IN_MAX)
     coneInIncrement = 0
@@ -347,6 +363,9 @@ function turnOffInputs() {
     la_pressed = false;
     da_pressed = false;
     ua_pressed = false;
+
+    p_pressed = false
+    o_pressed = false
 
     shift_pressed = false;
 
