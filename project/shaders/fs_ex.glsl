@@ -80,14 +80,14 @@ void main() {
 	float Cin   = cos((lightConeOut*PI/180.0/2.0) * lightConeIn);
 
 	vec4 spotlight = lightColor * decay * clamp( (dot(lx, lightDirection) - Cout) / (Cin - Cout), 0.0, 1.0);
-    vec4 lambertDiff = mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
+    vec4 lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
     vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);
 
     vec4 ambient = diffuseTextureColorMixture * ambientLightColor * ambientLightInfluence;
 
     vec4 emit = mEmitColor*diffuseTextureColorMixture;
 
-    outColor = diffuseTextureColorMixture * spotlight * (lambertDiff + blinnSpec) + ambient + emit;
+    outColor = spotlight * (lambertDiff + blinnSpec) + ambient + emit;
 
 	
 }

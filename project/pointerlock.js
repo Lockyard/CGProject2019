@@ -20,13 +20,19 @@ function lockChangeAlert() {
         document.mozPointerLockElement === canvas) {
       console.log('The pointer lock status is now locked');
       document.addEventListener("mousemove", updatePosition, false);
+      document.addEventListener("wheel", scrollWheel, false);
     } else {
       console.log('The pointer lock status is now unlocked'); 
       turnOffInputs()
       document.removeEventListener("mousemove", updatePosition, false);
+      document.removeEventListener("wheel", scrollWheel, false);
     }
   }
 
   function updatePosition(e) {
         incrementPlayerVisual(e.movementX, e.movementY)
+  }
+
+  function scrollWheel(e) {
+      incrementConeOut(e.deltaY)
   }

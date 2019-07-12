@@ -702,6 +702,12 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		perspective[15] = 0.0;	
 
 		return perspective;
-	}
+	},
 
+	//ADDED by us functions
+	clamp:function(num, min, max) {
+		return num <= min ? min : num >= max ? max : num;
+	}
 }
+
+	

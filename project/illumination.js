@@ -11,6 +11,16 @@ const OBJ_IS_LEVER_5 = 7;
 const LIGHT_TYPE_MIN = 0
 const LIGHT_TYPE_MAX = 2
 
+const CONE_OUT_MAX = 70
+const CONE_OUT_MIN = 5
+const CONE_IN_MAX = 1.0
+const CONE_IN_MIN = 0.0
+
+var lightConeIn = 0.7;
+var lightConeOut = 30.0;
+var lightDecay = 1.0
+var lightTarget = 1.0
+
 var currentLightType = 1
 
 

@@ -68,11 +68,6 @@ var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
 var lightDirection = [];
 var observerDirection = [];
 
-var lightConeIn = 0.7;
-var lightConeOut = 30.0;
-var lightDecay = 1.0
-var lightTarget = 1.0
-
 //Constants for finding specific objects
 var lightUpObjectHandle;
 var lightUpPercentageHandle;

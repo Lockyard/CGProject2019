@@ -30,6 +30,8 @@ var camAngSpeed = PLAYER_ANGLE_SENSITIVITY
 
 //increments for the angle of the camera used when input must be updated
 var angleIncrementH = 0, angleIncrementV = 0
+//increment for the spotlight's cone
+var coneOutIncrement = 0, coneInIncrement = 0
 
 
 
@@ -55,6 +57,9 @@ var la_pressed = false;
 var da_pressed = false;
 var ua_pressed = false;
 
+//others
+var shift_pressed = false;
+
 
 
 
@@ -77,6 +82,7 @@ function initInteraction(){
         //shift
         if (e.keyCode == 16) { //if shift down, cam speed is the one when player is running
             camSpeed = PLAYER_RUNNING_SPEED
+            shift_pressed = true
         }
 
         //actions, to do only when user presses the button but not if he holds it (so a check must be done)
@@ -158,6 +164,7 @@ function initInteraction(){
         //shift
         if (e.keyCode == 16) { //if shift up, cam speed becomes the standard speed
             camSpeed = PLAYER_SPEED
+            shift_pressed = false
         }
 
         if (e.keyCode == 69) {  // e
@@ -220,6 +227,8 @@ function updateInput() {
     delta = updateDelta()
 
     updatePlayerVisual()
+
+    updateControlledLightParams()
 
     //wasd
     if (a_pressed) {  // a
@@ -298,6 +307,29 @@ function incrementPlayerVisual(angleH, angleV) {
 
 
 /**
+ * Update parameters for the light controlled by the player
+ */
+function updateControlledLightParams() {
+    lightConeOut = utils.clamp(lightConeOut + coneOutIncrement, CONE_OUT_MIN, CONE_OUT_MAX)
+    lightConeIn  = utils.clamp(lightConeIn + coneInIncrement, CONE_IN_MIN, CONE_IN_MAX)
+    coneInIncrement = 0
+    coneOutIncrement = 0
+}
+
+
+/**
+ * increment the increments used at each cycle for the cone in and out
+ * @param {*} deltaCone 
+ */
+function incrementConeOut(deltaCone) {
+    if(shift_pressed)
+        coneInIncrement += deltaCone*0.001
+    else 
+        coneOutIncrement += deltaCone*0.1
+}
+
+
+/**
  * turn off all inputs
  */
 function turnOffInputs() {
@@ -315,6 +347,8 @@ function turnOffInputs() {
     la_pressed = false;
     da_pressed = false;
     ua_pressed = false;
+
+    shift_pressed = false;
 
     camSpeed = PLAYER_SPEED
 }
