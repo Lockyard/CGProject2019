@@ -1,8 +1,10 @@
 //Constants for finding specific objects (are vars because must be initialized but are in fact constants)
-var OBJ_IS_COPP_KEY
-var OBJ_IS_GOLD_KEY
-var OBJ_IS_GOLD_KEYHOLE
-var OBJ_IS_COPP_KEYHOLE
+var OBJ_IS_COPP_KEY_2
+var OBJ_IS_GOLD_KEY_4
+var OBJ_IS_KEY_2    //copper
+var OBJ_IS_KEY_4    //gold
+var OBJ_IS_KEYHOLE_2 //copper
+var OBJ_IS_KEYHOLE_4 //gold
 var OBJ_IS_LEVER_1
 var OBJ_IS_LEVER_3
 var OBJ_IS_LEVER_5
@@ -28,11 +30,12 @@ var currentLightType = 1
 //params for fire lights of torches
 var firelightsPositions = []
 
-
-var reachableLever = [false, false, false];
-var reachableKey = [false, false];
-var reachableKeyHole = [false, false];
-var carryingKey = [false, false];
+//all these arrays are used to check if something is reachable/carried. Are initialized in the load from model function and use indices
+//bound to the element number they refer to
+var reachableLever = [];
+var reachableKey = [];
+var reachableKeyHole = [];
+var carryingKey = [];
 
 var flag = 0;
 var colorInfluence = 0.0;
@@ -44,13 +47,13 @@ var delta = 1.0;
  *  @param {index of the mesh we are considering} i
  */
 function illuminateReachableObjects(i){
-    if( (i == OBJ_IS_LEVER_1  && isReachableLever(1))
-        || (i == OBJ_IS_LEVER_3  && isReachableLever(3))
-        || (i == OBJ_IS_LEVER_5  && isReachableLever(5))
-        || (i == OBJ_IS_COPP_KEY && reachableKey[0] && !carryingKey[0])
-        || (i == OBJ_IS_GOLD_KEY && reachableKey[1] && !carryingKey[1])
-        || (i == OBJ_IS_COPP_KEYHOLE && reachableKeyHole[1] && carryingKey[0])
-        || (i == OBJ_IS_GOLD_KEYHOLE && reachableKeyHole[0] && carryingKey[1])
+    if( (i == OBJ_IS_LEVER_1  && reachableLever[1])
+        || (i == OBJ_IS_LEVER_3  && reachableLever[3])
+        || (i == OBJ_IS_LEVER_5  && reachableLever[5])
+        || (i == OBJ_IS_KEY_2 && reachableKey[2] && !carryingKey[2])
+        || (i == OBJ_IS_KEY_4 && reachableKey[4] && !carryingKey[4])
+        || (i == OBJ_IS_KEYHOLE_2 && reachableKeyHole[2] && carryingKey[2])
+        || (i == OBJ_IS_KEYHOLE_4 && reachableKeyHole[4] && carryingKey[4])
     ) {
         gl.uniform1f(lightUpObjectHandle, 1.0);
         gl.uniform1f(lightUpPercentageHandle, animateObjectLight());
@@ -95,6 +98,7 @@ function loadIlluminationParamsFromModel(loadedModel) {
         if(oname.startsWith('lever')) {
             //get the number from the name
             let leverNum = parseInt(oname.split('_')[0].substring(5))
+            reachableLever[leverNum] = false
             switch(leverNum) {
                 case 1:
                     OBJ_IS_LEVER_1 = i
@@ -108,26 +112,33 @@ function loadIlluminationParamsFromModel(loadedModel) {
         }
         //if it's a keyhole
          else if(oname.startsWith('keyhole')) {
-             //find the type from the name
-             let khType = oname.split('-')[1].split('_')[0]
-             switch(khType) {
-                case 'copper':
-                    OBJ_IS_COPP_KEYHOLE = i
+             //find the number from the name
+             let khNum = parseInt(oname.split('-')[0].substring(7))
+
+             reachableKeyHole[khNum] = false
+
+             switch(khNum) {
+                case 2:
+                    OBJ_IS_KEYHOLE_2 = i
                     break
-                case 'gold':
-                    OBJ_IS_GOLD_KEYHOLE = i
+                case 4:
+                    OBJ_IS_KEYHOLE_4 = i
+                    
              }
         } 
         //if it's a key
         else if(oname.startsWith('key')) {
-            //extract the key type (copper, etc.) by taking the correct part of the full model name (kinda wierd format but that's what we chose as name)
-            let keyType = oname.split('-')[1].split('_')[0]
-            switch(keyType) {
-                case 'copper':
-                    OBJ_IS_COPP_KEY = i
+            let keyNum = parseInt(oname.split('-')[0].substring(3))
+            reachableKey[keyNum] = false
+            carryingKey[keyNum] = false
+
+            switch(keyNum) {
+                case 2:
+                    OBJ_IS_KEY_2 = i
                     break
-                case 'gold':
-                    OBJ_IS_GOLD_KEY = i
+                case 4:
+                    OBJ_IS_KEY_4 = i
+                    
              }
         }
         //if it's a fire of a torch
@@ -138,18 +149,4 @@ function loadIlluminationParamsFromModel(loadedModel) {
             console.log('added fire:'+oname+" in: ("+position[0]+","+position[1]+","+position[2]+")")
         }
     }
-}
-
-/**
- * Check if is reachable a specific lever by its number
- * @param {logical number of the lever} num 
- */
-function isReachableLever(num) {
-    //for each lever, check if is the number searched and if it's reachable
-    for (let i = 0; i < reachableLever.length; i++) {
-        if(num == levers[i].number && reachableLever[i]) {
-            return true
-        }
-    }
-    return false
 }

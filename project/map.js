@@ -89,22 +89,22 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Lever "+levers[i].number+" reachable!"
             allUnreachables = false
-            reachableLever[i] = true; //parameter to simplify checks in illumination.js
-        }else reachableLever[i] = false; //parameter to simplify checks in illumination.js
+            reachableLever[levers[i].number] = true; //parameter to simplify checks in illumination.js
+        }else reachableLever[levers[i].number] = false; //parameter to simplify checks in illumination.js
     }
     for (let i = 0; i < keys.length; i++) {
         if(keys[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Key "+keys[i].number+" reachable!"
             allUnreachables = false
-            reachableKey[i] = true; //parameter to simplify checks in illumination.js
-        }else reachableKey[i] = false; //parameter to simplify checks in illumination.js
+            reachableKey[keys[i].number] = true; //parameter to simplify checks in illumination.js
+        }else reachableKey[keys[i].number] = false; //parameter to simplify checks in illumination.js
     }
     for (let i = 0; i < keyholes.length; i++) {
         if(keyholes[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Keyhole "+keyholes[i].door.number+" reachable!"
             allUnreachables = false
-            reachableKeyHole[i] = true; //parameter to simplify checks in illumination.js
-        }else reachableKeyHole[i] = false; //parameter to simplify checks in illumination.js
+            reachableKeyHole[keyholes[i].door.number] = true; //parameter to simplify checks in illumination.js
+        }else reachableKeyHole[keyholes[i].door.number] = false; //parameter to simplify checks in illumination.js
     }
     if(allUnreachables) {document.getElementById("debugElements").innerText = ""}
     //end of reachables check
@@ -136,7 +136,7 @@ function playerActionInspect(pX, pY, pZ, pHA, pVA) {
     for (let i = 0; i < keys.length; i++) {
         if(keys[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             keys[i].pickUp()
-            carryingKey[i] = true; //parameter to simplify checks in illumination.js
+            carryingKey[keys[i].number] = true; //parameter to simplify checks in illumination.js
         }
     }
 
@@ -144,7 +144,7 @@ function playerActionInspect(pX, pY, pZ, pHA, pVA) {
     for (let i = 0; i < keyholes.length; i++) {
         if(keyholes[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             keyholes[i].openUp()
-            carryingKey[i] = false; //parameter to simplify checks in illumination.js
+            carryingKey[keys[i].number] = false; //parameter to simplify checks in illumination.js
         }
     }
 }
