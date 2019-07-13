@@ -232,8 +232,7 @@ function increasePosition(amount, direction) {
 	
 }
 
-function updateInput() {
-    delta = updateDelta()
+function updateInput(delta) {
 
     updatePlayerVisual()
 

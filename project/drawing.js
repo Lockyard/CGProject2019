@@ -24,6 +24,7 @@ var ambientLightColorHandle;
 
 var matrixPositionHandle;
 var	materialDiffColorHandle;
+//player's light params
 var lightPositionHandle;
 var lightColorHandle;
 var lightDirectionHandle;
@@ -32,6 +33,12 @@ var lightConeInHandle;
 var lightConeOutHandle;
 var lightDecayHandle;
 var lightTargetHandle;
+//torches light params (point lights)
+var torchlightPositionHandle;
+var torchlightColorHandle;
+var torchlightDecayHandle;
+var torchlightTargetHandle;
+
 var	eyePositionHandle;
 var eyeDirectionHandle
 var materialSpecColorHandle;
@@ -64,6 +71,7 @@ var ambientLightColor = [1.0, 1.0, 1.0, 1.0];
 //var currentLightType = 1; //initialized in illumination
 var lightPositionObj = new Array();
 var lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
+
 //Parameters for light definition (directional light)
 var lightDirection = [];
 var observerDirection = [];
@@ -175,6 +183,12 @@ function loadShaders(){
         lightConeOutHandle = gl.getUniformLocation(shaderProgram,'lightConeOut');
         lightDecayHandle = gl.getUniformLocation(shaderProgram, 'lightDecay');
         lightTargetHandle = gl.getUniformLocation(shaderProgram, 'lightTarget');
+
+        //torch handlers
+        torchlightPositionHandle    = gl.getUniformLocation(shaderProgram, 'torchlightPosition');
+        torchlightColorHandle       = gl.getUniformLocation(shaderProgram, 'torchlightColor');
+        torchlightDecayHandle       = gl.getUniformLocation(shaderProgram, 'torchlightDecay');
+        torchlightTargetHandle      = gl.getUniformLocation(shaderProgram, 'torchlightTarget');
 
         //lightUpObjectHandle = gl.getAttribLocation(shaderProgram, 'inLightUpObject');
         lightUpObjectHandle = gl.getUniformLocation(shaderProgram, 'fsLightUpObject');
@@ -395,7 +409,8 @@ function computeMatrices(){
 
 
 function drawScene(){
-	updateInput();
+    updateDelta()
+	updateInput(delta);
 
     computeMatrices();
 
@@ -458,6 +473,17 @@ function drawScene(){
         gl.uniform1f(lightDecayHandle, lightDecay);
         gl.uniform1f(lightTargetHandle, lightTarget);
 
+        //torch uniforms
+        gl.uniform3fv(torchlightPositionHandle, torchlightsPositions);
+
+        gl.uniform4f(torchlightColorHandle, torchlightColor[0],
+            torchlightColor[1],
+            torchlightColor[2],
+            torchlightColor[3]);
+
+        gl.uniform1f(torchlightDecayHandle, torchlightDecay);
+        gl.uniform1f(torchlightTargetHandle, torchlightTarget);
+
 
         gl.uniform3f(eyePositionHandle,	observerPositionObj[i][0],
             observerPositionObj[i][1],
@@ -510,5 +536,4 @@ function updateDelta() {
     t = Date.now()/1000.0
     delta = Math.min(t - prevT, MIN_DELTA)
     prevT = t
-    return delta;
 }

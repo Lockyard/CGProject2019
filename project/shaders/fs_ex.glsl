@@ -2,6 +2,8 @@
 precision mediump float;
 
 const float PI = 3.14159265358979;
+//distance above which the light from a torch must not be calculated, for performance
+const float TORCH_CALC_DISTANCE_THRESHOLD = 3.0;
 
 uniform vec4 mDiffColor;
 uniform vec4 mSpecColor;            
@@ -17,13 +19,17 @@ uniform vec3 lightDirection;
 uniform vec3 lightPosition;
 uniform vec4 lightColor;
 uniform int lightType;
-//same parameters for every other light
-//uniform vec3 torchlights[];
 
 uniform float lightConeOut;
 uniform float lightConeIn;
 uniform float lightDecay;
 uniform float lightTarget;
+
+//same parameters for every other light
+uniform vec3 torchlightPosition[13];
+uniform vec4 torchlightColor;
+uniform float torchlightDecay;
+uniform float torchlightTarget;
 
 uniform vec3 eyePosition;
 uniform vec3 eyeDirection;
@@ -38,36 +44,14 @@ out vec4 outColor;
 uniform float fsLightUpObject;
 uniform float lightUpPercentage;
 
-//Function to create different lights types
-//vec3 pos = the surface position
-vec4 lightModel(int lt, vec3 pos) {
-	
-	//The normalize light direction
-    vec3 nLightDir;
-	//Float to store light dimension and cone length
-	float lDim, lCone;
+vec4 torchlightContribution(int i) {
+	vec3 lx = normalize(torchlightPosition[i] - fsPosition);
+	float decay = pow((torchlightTarget / length(torchlightPosition[i] - fsPosition)), torchlightDecay);
+	vec4 pointLight = torchlightColor * decay;
+	vec4 lambertDiff = mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
+    vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);
 
-	lDim = 1.0;
-
-	if(lt == 1){						//Point light (decay)
-		float lLen = length(lightPosition - pos);
-		nLightDir = normalize(lightPosition - pos);
-		lDim = 15.0 / (lLen * lLen);
-	} else if(lt == 2) {				//Spot light
-		float cOut = 0.85;
-		float cIn = 0.99;
-		nLightDir = normalize(lightPosition - pos);
-		lCone = -dot(nLightDir, normalize(lightDirection));
-		if(lCone < cOut) {
-			lDim = 0.0;
-		} else if(lCone > cIn) {
-			lDim = 1.0;
-		} else {
-			lDim = (lCone - cOut) / (cIn - cOut);
-		}
-	}
-
-	return vec4(nLightDir, lDim);
+	return pointLight*(lambertDiff + blinnSpec);
 }
 
 void main() { 
@@ -82,11 +66,10 @@ void main() {
 	float Cin   = cos((lightConeOut*PI/360.0) * lightConeIn);
 
 	vec4 spotlight = lightColor * decay * clamp( (dot(lx, lightDirection) - Cout) / (Cin - Cout), 0.0, 1.0);
+	vec4 lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
     vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);
 
 	vec4 ambient = (diffuseTextureColorMixture*0.5 + vec4(0.5, 0.5, 0.5, 0.5)) * ambientLightColor * ambientLightInfluence;
-
-	vec4 lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
 
 	vec4 lightUp;
 
@@ -99,7 +82,15 @@ void main() {
 
 	vec4 emit = mEmitColor*diffuseTextureColorMixture;
 
-	outColor = spotlight * (lambertDiff + blinnSpec) + ambient + emit +lightUp;
+	vec4 mainColor = spotlight * (lambertDiff + blinnSpec) + ambient + emit +lightUp;
+
+	for(int i=0;i< 13; i++) {
+		if(length(torchlightPosition[i] - fsPosition) < TORCH_CALC_DISTANCE_THRESHOLD) {
+			mainColor += torchlightContribution(i);
+		}
+	}
+
+	outColor = mainColor;
 
 	
 }

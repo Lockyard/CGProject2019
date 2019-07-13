@@ -28,7 +28,10 @@ var lightTarget = 1.0
 var currentLightType = 1
 
 //params for fire lights of torches
-var firelightsPositions = []
+var torchlightsPositions = new Array()
+var torchlightColor = new Float32Array([1.0, 0.7, 0.1, 1.0]);
+var torchlightDecay = 2.0
+var torchlightTarget = 0.4
 
 //all these arrays are used to check if something is reachable/carried. Are initialized in the load from model function and use indices
 //bound to the element number they refer to
@@ -86,7 +89,10 @@ function changeToNextLight() {
     }
 } 
 
-
+/**
+ * Use the model to load parameters used for illumination
+ * @param {*} loadedModel 
+ */
 function loadIlluminationParamsFromModel(loadedModel) {
     let numObjects = loadedModel.meshes.length
     let oname;
@@ -145,7 +151,9 @@ function loadIlluminationParamsFromModel(loadedModel) {
         else if(oname.startsWith('fire')) {
             //get the mean value of vertices to get its position for its light
             let position = utils.getMeanXYZ(loadedModel.meshes[i].vertices)
-            firelightsPositions.push(position);
+            torchlightsPositions.push(position[0])
+            torchlightsPositions.push(position[1])
+            torchlightsPositions.push(position[2])
             console.log('added fire:'+oname+" in: ("+position[0]+","+position[1]+","+position[2]+")")
         }
     }
