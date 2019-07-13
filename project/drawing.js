@@ -192,6 +192,7 @@ function loadModel(modelName){
         console.log("Found " + sceneObjects + " objects...");
 
         loadElementsFromModel(loadedModel)
+        loadIlluminationParamsFromModel(loadedModel)
 
         //preparing to store objects' world matrix & the lights & material properties per object
         for (i=0; i < sceneObjects; i++) {

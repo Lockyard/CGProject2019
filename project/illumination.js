@@ -1,11 +1,11 @@
-//Constants for finding specific objects
-const OBJ_IS_COPP_KEY = 0;
-const OBJ_IS_GOLD_KEY = 1;
-const OBJ_IS_GOLD_KEYHOLE = 3;
-const OBJ_IS_COPP_KEYHOLE = 4;
-const OBJ_IS_LEVER_1 = 5;
-const OBJ_IS_LEVER_3 = 6;
-const OBJ_IS_LEVER_5 = 7;
+//Constants for finding specific objects (are vars because must be initialized but are in fact constants)
+var OBJ_IS_COPP_KEY
+var OBJ_IS_GOLD_KEY
+var OBJ_IS_GOLD_KEYHOLE
+var OBJ_IS_COPP_KEYHOLE
+var OBJ_IS_LEVER_1
+var OBJ_IS_LEVER_3
+var OBJ_IS_LEVER_5
 
 //type of light, the user can switch among these values
 const LIGHT_TYPE_MIN = 0
@@ -41,9 +41,9 @@ var delta = 1.0;
  *  @param {index of the mesh we are considering} i
  */
 function illuminateReachableObjects(i){
-    if( (i == OBJ_IS_LEVER_1  && reachableLever[0] )
-        || (i == OBJ_IS_LEVER_3  && reachableLever[1])
-        || (i == OBJ_IS_LEVER_5  && reachableLever[2])
+    if( (i == OBJ_IS_LEVER_1  && isReachableLever(1))
+        || (i == OBJ_IS_LEVER_3  && isReachableLever(3))
+        || (i == OBJ_IS_LEVER_5  && isReachableLever(5))
         || (i == OBJ_IS_COPP_KEY && reachableKey[0] && !carryingKey[0])
         || (i == OBJ_IS_GOLD_KEY && reachableKey[1] && !carryingKey[1])
         || (i == OBJ_IS_COPP_KEYHOLE && reachableKeyHole[1] && carryingKey[0])
@@ -79,3 +79,69 @@ function changeToNextLight() {
         currentLightType = LIGHT_TYPE_MIN
     }
 } 
+
+
+function loadIlluminationParamsFromModel(loadedModel) {
+    let numObjects = loadedModel.meshes.length
+    let oname;
+    //analyze each objects
+    for (let i = 0; i < numObjects; i++) {
+        oname = loadedModel.rootnode.children[i].name.toLowerCase()
+        
+        //if it's a lever
+        if(oname.startsWith('lever')) {
+            //get the number from the name
+            let leverNum = parseInt(oname.split('_')[0].substring(5))
+            switch(leverNum) {
+                case 1:
+                    OBJ_IS_LEVER_1 = i
+                    break
+                case 3:
+                    OBJ_IS_LEVER_3 = i
+                    break
+                case 5:
+                    OBJ_IS_LEVER_5 = i
+            }
+        }
+        //if it's a keyhole
+         else if(oname.startsWith('keyhole')) {
+             //find the type from the name
+             let khType = oname.split('-')[1].split('_')[0]
+             switch(khType) {
+                case 'copper':
+                    OBJ_IS_COPP_KEYHOLE = i
+                    break
+                case 'gold':
+                    OBJ_IS_GOLD_KEYHOLE = i
+             }
+        } 
+        //if it's a key
+        else if(oname.startsWith('key')) {
+            //extract the key type (copper, etc.) by taking the correct part of the full model name (kinda wierd format but that's what we chose as name)
+            let keyType = oname.split('-')[1].split('_')[0]
+            switch(keyType) {
+                case 'copper':
+                    OBJ_IS_COPP_KEY = i
+                    break
+                case 'gold':
+                    OBJ_IS_GOLD_KEY = i
+             }
+        }
+    }
+}
+
+/**
+ * Check if is reachable a specific lever by its number
+ * @param {logical number of the lever} num 
+ */
+function isReachableLever(num) {
+    //for each lever, check if is the number searched and if it's reachable
+    for (let i = 0; i < reachableLever.length; i++) {
+        if(num == levers[i].number && reachableLever[i]) {
+            document.getElementById("debugLevers").innerText = "Reachable lever " + num
+            return true
+        }
+    }
+    document.getElementById("debugLevers").innerText = "No reachable Lever!"
+    return false
+}

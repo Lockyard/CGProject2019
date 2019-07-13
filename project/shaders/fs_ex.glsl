@@ -17,6 +17,8 @@ uniform vec3 lightDirection;
 uniform vec3 lightPosition;
 uniform vec4 lightColor;
 uniform int lightType;
+//same parameters for every other light
+//uniform vec3 torchlights[];
 
 uniform float lightConeOut;
 uniform float lightConeIn;
@@ -76,18 +78,26 @@ void main() {
     vec3 lx = normalize(lightPosition - fsPosition);
 	float decay = pow((lightTarget / length(lightPosition - fsPosition)), lightDecay);
 
-    float Cout  = cos(lightConeOut*PI/180.0/2.0);
-	float Cin   = cos((lightConeOut*PI/180.0/2.0) * lightConeIn);
+    float Cout  = cos(lightConeOut*PI/360.0);
+	float Cin   = cos((lightConeOut*PI/360.0) * lightConeIn);
 
 	vec4 spotlight = lightColor * decay * clamp( (dot(lx, lightDirection) - Cout) / (Cin - Cout), 0.0, 1.0);
-    vec4 lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
     vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);
 
-    vec4 ambient = diffuseTextureColorMixture * ambientLightColor * ambientLightInfluence;
+	vec4 ambient = (diffuseTextureColorMixture*0.5 + vec4(0.5, 0.5, 0.5, 0.5)) * ambientLightColor * ambientLightInfluence;
 
-    vec4 emit = mEmitColor*diffuseTextureColorMixture;
+	vec4 lambertDiff;
 
-    outColor = spotlight * (lambertDiff + blinnSpec) + ambient + emit;
+	if(fsLightUpObject > 0.0) {
+		lambertDiff = ambientLightColor * lightUpPercentage;
+	}
+	else {
+		lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
+	}
+
+	vec4 emit = mEmitColor*diffuseTextureColorMixture;
+
+	outColor = spotlight * (lambertDiff + blinnSpec) + ambient + emit;
 
 	
 }
