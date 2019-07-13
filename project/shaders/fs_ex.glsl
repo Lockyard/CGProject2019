@@ -86,18 +86,20 @@ void main() {
 
 	vec4 ambient = (diffuseTextureColorMixture*0.5 + vec4(0.5, 0.5, 0.5, 0.5)) * ambientLightColor * ambientLightInfluence;
 
-	vec4 lambertDiff;
+	vec4 lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
+
+	vec4 lightUp;
 
 	if(fsLightUpObject > 0.0) {
-		lambertDiff = ambientLightColor * lightUpPercentage;
+		lightUp = ambientLightColor * lightUpPercentage;
 	}
 	else {
-		lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
+		lightUp = vec4(0.0, 0.0, 0.0, 0.0);
 	}
 
 	vec4 emit = mEmitColor*diffuseTextureColorMixture;
 
-	outColor = spotlight * (lambertDiff + blinnSpec) + ambient + emit;
+	outColor = spotlight * (lambertDiff + blinnSpec) + ambient + emit +lightUp;
 
 	
 }

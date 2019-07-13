@@ -25,6 +25,9 @@ var lightTarget = 1.0
 
 var currentLightType = 1
 
+//params for fire lights of torches
+var firelightsPositions = []
+
 
 var reachableLever = [false, false, false];
 var reachableKey = [false, false];
@@ -63,9 +66,9 @@ function animateObjectLight(){
         colorInfluence += delta/5;
     else
         colorInfluence -= delta/5;
-    if (colorInfluence <= 0.001)
+    if (colorInfluence <= 0.1)
         flag = 0;
-    else if (colorInfluence >= 0.100)
+    else if (colorInfluence >= 0.4)
         flag = 1;
     return colorInfluence;
 }
@@ -127,6 +130,13 @@ function loadIlluminationParamsFromModel(loadedModel) {
                     OBJ_IS_GOLD_KEY = i
              }
         }
+        //if it's a fire of a torch
+        else if(oname.startsWith('fire')) {
+            //get the mean value of vertices to get its position for its light
+            let position = utils.getMeanXYZ(loadedModel.meshes[i].vertices)
+            firelightsPositions.push(position);
+            console.log('added fire:'+oname+" in: ("+position[0]+","+position[1]+","+position[2]+")")
+        }
     }
 }
 
@@ -138,10 +148,8 @@ function isReachableLever(num) {
     //for each lever, check if is the number searched and if it's reachable
     for (let i = 0; i < reachableLever.length; i++) {
         if(num == levers[i].number && reachableLever[i]) {
-            document.getElementById("debugLevers").innerText = "Reachable lever " + num
             return true
         }
     }
-    document.getElementById("debugLevers").innerText = "No reachable Lever!"
     return false
 }

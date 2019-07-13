@@ -707,6 +707,28 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 	//ADDED by us functions
 	clamp:function(num, min, max) {
 		return num <= min ? min : num >= max ? max : num;
+	},
+
+	/**
+	 * Get the mean value for each axis X Y Z from an array of positions
+	 * @param {array of module 3 length} array3 
+	 */
+	getMeanXYZ:function(array3x) {
+		let er = array3x.length % 3 //to avoid errors in case of non mul-3 arrays. Still shouldn't happen
+		//mean is the mean of values for each of 3 axis analysed so far
+		let mean = [0,0,0]
+		//n is how many points have been counted
+		let n = 0
+    	for(let i = 0; i < array3x.length - er; i+=3) {
+			//increment N
+			n++
+			//increment means accordingly: [M' = M*(N-1)/N + x/N] -> M' is the new mean, N is the counted points.
+			//this formula allows to not exceed with the total in case of overflow
+			mean[0]	=	mean[0]*((n-1)/n) + array3x[i]/n
+			mean[1]	=	mean[1]*((n-1)/n) + array3x[i+1]/n
+			mean[2]	=	mean[2]*((n-1)/n) + array3x[i+2]/n
+		}
+		return mean
 	}
 }
 
