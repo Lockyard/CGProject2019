@@ -65,7 +65,7 @@ var observerPositionObj = new Array();
 var observerDirectionObj = new Array();
 var lightDirectionObj = new Array();
 // Ambient light parameters
-var ambientLightInfluence = 0.2;
+var ambientLightInfluence = 0.1;
 var ambientLightColor = [1.0, 1.0, 1.0, 1.0];
 // Lantern - user's light - parameters
 //var currentLightType = 1; //initialized in illumination

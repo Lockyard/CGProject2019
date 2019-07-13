@@ -49,9 +49,10 @@ vec4 torchlightContribution(int i) {
 	float decay = pow((torchlightTarget / length(torchlightPosition[i] - fsPosition)), torchlightDecay);
 	vec4 pointLight = torchlightColor * decay;
 	vec4 lambertDiff = mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
+	//specular could be calculated but would result in no visual change (walls don't reflect much)
     vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);
-
-	return pointLight*(lambertDiff + blinnSpec);
+	return clamp(pointLight*(lambertDiff + blinnSpec), 0.0, 0.8);
+	//return clamp(pointLight*(lambertDiff), 0.0, 0.8);
 }
 
 void main() { 
