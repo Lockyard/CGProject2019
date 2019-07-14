@@ -32,6 +32,8 @@ var torchlightsPositions = new Array()
 var torchlightColor = new Float32Array([1.0, 0.7, 0.1, 1.0]);
 var torchlightDecay = 1.5
 var torchlightTarget = 0.5
+//array of floats of [0, 1] values, indicate the amount of flicker of the light of each torch
+var torchlightsFlickerAmounts = new Array()
 
 //all these arrays are used to check if something is reachable/carried. Are initialized in the load from model function and use indices
 //bound to the element number they refer to
@@ -77,6 +79,13 @@ function animateObjectLight(){
     else if (colorInfluence >= 0.4)
         flag = 1;
     return colorInfluence;
+}
+
+/**
+ * update some light time-changing parameters, such as the torch flickers
+ */
+function updateLightParams(delta) {
+
 }
 
 
@@ -154,7 +163,6 @@ function loadIlluminationParamsFromModel(loadedModel) {
             torchlightsPositions.push(position[0])
             torchlightsPositions.push(position[1])
             torchlightsPositions.push(position[2])
-            console.log('added fire:'+oname+" in: ("+position[0]+","+position[1]+","+position[2]+")")
         }
     }
 }

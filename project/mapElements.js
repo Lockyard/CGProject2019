@@ -54,6 +54,9 @@ var Door = function(number, isOpen, tile) {
     //is still means if it's not moving, to save computation if it's not
     this.isStill = true
 
+    //node for animation in scenegraph. It's bound and used in the animation section
+    this.node = undefined
+
     /**
      * Function with a delta time. rise the door if opened and has not reached yet the target height
      */
@@ -140,6 +143,9 @@ var Lever = function(number, isActivated, x0, x1, y0, y1, z0, z1) {
     this.z0 = z0
     this.z1 = z1
 
+    //node for animation in scenegraph. It's bound and used in the animation section
+    this.node = undefined
+
     //change the lever's status active/inactive, and activate the corresponding doors with same number (array)
     this.activate = function(doors) {
         isActivated = !isActivated
@@ -212,6 +218,9 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
     this.y1 = y1
     this.z0 = z0
     this.z1 = z1
+
+    //node for animation in scenegraph. It's bound and used in the animation section
+    this.node = undefined
 
     //check if this key is reachable from given position and angles with a reach length
     this.isReachable = function(x, y, z, angleH, angleV, reach) {
@@ -292,6 +301,9 @@ var Keyhole = function(door, isOpened, type, x0, x1, y0, y1, z0, z1) {
     this.y1 = y1
     this.z0 = z0
     this.z1 = z1
+
+    //node for animation in scenegraph. It's bound and used in the animation section
+    this.node = undefined
 
     //check if this key is reachable from given position and angles with a reach length
     this.isReachable = function(x, y, z, angleH, angleV, reach) {

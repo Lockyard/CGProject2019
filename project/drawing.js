@@ -23,6 +23,7 @@ var ambientLightInfluenceHandle;
 var ambientLightColorHandle;
 
 var matrixPositionHandle;
+var worldMatrixHandle;
 var	materialDiffColorHandle;
 //player's light params
 var lightPositionHandle;
@@ -162,6 +163,7 @@ function loadShaders(){
         vertexUVHandle = gl.getAttribLocation(shaderProgram, 'inUVs');
 
         matrixPositionHandle = gl.getUniformLocation(shaderProgram, 'wvpMatrix');
+        worldMatrixHandle = gl.getUniformLocation(shaderProgram, 'worldMatrix');
 
         materialDiffColorHandle = gl.getUniformLocation(shaderProgram, 'mDiffColor');
         materialSpecColorHandle = gl.getUniformLocation(shaderProgram, 'mSpecColor');
@@ -204,9 +206,10 @@ function loadModel(modelName){
         sceneObjects = loadedModel.meshes.length ;
 
         console.log("Found " + sceneObjects + " objects...");
-
+        //from model, load parameters for logic, illumination and scenegraph, separately
         loadElementsFromModel(loadedModel)
         loadIlluminationParamsFromModel(loadedModel)
+        loadSceneGraphFromModel(loadedModel)
 
         //preparing to store objects' world matrix & the lights & material properties per object
         for (i=0; i < sceneObjects; i++) {
@@ -360,6 +363,7 @@ function loadModel(modelName){
 
             //creating the objects' world matrix
             objectWorldMatrix[i] = loadedModel.rootnode.children[i].transformation;
+            console.log("World Matrix:"+objectWorldMatrix[i])
 
             //Correcting the orientation of dungeon
             objectWorldMatrix[i] = utils.multiplyMatrices(
@@ -393,16 +397,16 @@ function computeMatrices(){
     observerDirection = lightDirection;
 
     for(i=0; i < sceneObjects; i++){
-        projectionMatrix[i] = utils.multiplyMatrices(viewMatrix, objectWorldMatrix[i]);
+        projectionMatrix[i] = utils.multiplyMatrices(viewMatrix, nodes[i].worldMatrix);
         projectionMatrix[i] = utils.multiplyMatrices(perspectiveMatrix, projectionMatrix[i]);
 
-        lightDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), lightDirection);
+        lightDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(nodes[i].worldMatrix)), lightDirection);
 
-        lightPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])),lanternPos);
+        lightPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(nodes[i].worldMatrix)),lanternPos);
 
-        observerPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), eyeTemp);
+        observerPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(nodes[i].worldMatrix)), eyeTemp);
 
-        observerDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), observerDirection);
+        observerDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(nodes[i].worldMatrix)), observerDirection);
     }
 
 }
@@ -410,9 +414,12 @@ function computeMatrices(){
 
 function drawScene(){
     updateDelta()
-	updateInput(delta);
+    updateInput(delta)
+    updateAnimations()
+    updateSceneGraph()
 
-    computeMatrices();
+    computeMatrices()
+
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -421,6 +428,8 @@ function drawScene(){
     for(i=0; i < sceneObjects; i++){
 
         gl.uniformMatrix4fv(matrixPositionHandle, gl.FALSE, utils.transposeMatrix(projectionMatrix[i]));
+
+        gl.uniformMatrix4fv(worldMatrixHandle, gl.FALSE, utils.transposeMatrix(nodes[i].worldMatrix));
 
         gl.uniform1f(ambientLightInfluenceHandle, ambientLightInfluence);
 
