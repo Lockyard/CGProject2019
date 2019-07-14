@@ -1,6 +1,4 @@
 //Constants for finding specific objects (are vars because must be initialized but are in fact constants)
-var OBJ_IS_COPP_KEY_2
-var OBJ_IS_GOLD_KEY_4
 var OBJ_IS_KEY_2    //copper
 var OBJ_IS_KEY_4    //gold
 var OBJ_IS_KEYHOLE_2 //copper

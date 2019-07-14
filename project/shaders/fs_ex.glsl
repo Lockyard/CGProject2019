@@ -63,21 +63,15 @@ void main() {
     
     //Computing the color contribution from the texture or from the diffuse color (for levers)
 	vec4 diffuseTextureColorMixture = texture(textureFile, fsUVs);
-    
-    vec3 lx = normalize(lightPosition - fsPosition);
-	float decay = pow((lightTarget / length(lightPosition - fsPosition)), lightDecay);
 
-    float Cout  = cos(lightConeOut*PI/360.0);
-	float Cin   = cos((lightConeOut*PI/360.0) * lightConeIn);
+	vec3 lx = normalize(lightPosition - fsPosition);
 
-	vec4 spotlight = lightColor * decay * clamp( (dot(lx, lightDirection) - Cout) / (Cin - Cout), 0.0, 1.0);
 	vec4 lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
     vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);
 
 	vec4 ambient = partialColor(diffuseTextureColorMixture, 0.5) * ambientLightColor * ambientLightInfluence;
 
 	vec4 lightUp;
-
 	if(fsLightUpObject > 0.0) {
 		lightUp = ambientLightColor * lightUpPercentage;
 	}
@@ -87,7 +81,20 @@ void main() {
 
 	vec4 emit = mEmitColor*diffuseTextureColorMixture;
 
-	vec4 mainColor = spotlight * (lambertDiff + blinnSpec) + ambient + emit +lightUp;
+	float decay = pow((lightTarget / length(lightPosition - fsPosition)), lightDecay);
+	vec4 light;
+	if(lightType == 1){						//Point light (decay)
+		float lLen = length(lightPosition - fsPosition);
+		float lDim = 15.0 / (lLen * lLen);
+		light = lightColor * decay;
+	} else if(lightType == 2) {				//Spot light
+		float Cout  = cos(lightConeOut*PI/360.0);
+		float Cin   = cos((lightConeOut*PI/360.0) * lightConeIn);
+
+		light = lightColor * decay * clamp( (dot(lx, lightDirection) - Cout) / (Cin - Cout), 0.0, 1.0);
+	}
+
+	vec4 mainColor = light * (lambertDiff + blinnSpec) + ambient + emit +lightUp;
 
 	for(int i=0;i< 13; i++) {
 		if(length(torchlightPosition[i] - fsPosition) < TORCH_CALC_DISTANCE_THRESHOLD) {

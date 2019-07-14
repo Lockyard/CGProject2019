@@ -1,7 +1,7 @@
 /*
 * BALDASSERONI - CARNAGHI
-* Based on last exercise session with model "hogwarts.json"
-* Shading per-pixel (Phong): only "p" shaders used
+* Computer Graphics 2019 course
+* Politecnico di Milano
 */
 
 var canvas;
