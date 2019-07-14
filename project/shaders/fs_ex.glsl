@@ -27,6 +27,7 @@ uniform float lightTarget;
 
 //same parameters for every other light
 uniform vec3 torchlightPosition[13];
+uniform float torchlightFlickerAmt;//[13];
 uniform vec4 torchlightColor;
 uniform float torchlightDecay;
 uniform float torchlightTarget;
@@ -52,7 +53,7 @@ vec4 partialColor(vec4 color, float percentage) {
 
 vec4 torchlightContribution(int i, vec4 textColor) {
 	vec3 lx = normalize(torchlightPosition[i] - fsPosition);
-	float decay = pow((torchlightTarget / length(torchlightPosition[i] - fsPosition)), torchlightDecay);
+	float decay = torchlightFlickerAmt/*[i]*/*pow((torchlightTarget / length(torchlightPosition[i] - fsPosition)), torchlightDecay);
 	vec4 pointLight = torchlightColor * decay;
 	vec4 lambertDiff = partialColor(textColor, 0.3)* mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
     vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);

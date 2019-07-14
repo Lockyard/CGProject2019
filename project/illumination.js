@@ -30,8 +30,9 @@ var torchlightsPositions = new Array()
 var torchlightColor = new Float32Array([1.0, 0.7, 0.1, 1.0]);
 var torchlightDecay = 1.5
 var torchlightTarget = 0.5
+var n_torches = 0;
 //array of floats of [0, 1] values, indicate the amount of flicker of the light of each torch
-var torchlightsFlickerAmounts = new Array()
+var torchlightsFlickerAmounts = 1.0//= new Array()
 
 //all these arrays are used to check if something is reachable/carried. Are initialized in the load from model function and use indices
 //bound to the element number they refer to
@@ -79,11 +80,26 @@ function animateObjectLight(){
     return colorInfluence;
 }
 
+var flag2 = 0;
 /**
  * update some light time-changing parameters, such as the torch flickers
  */
-function updateLightParams(delta) {
-
+function updateLightParams() {
+    //for(i=0; i < n_torches; i++) {
+        /*if ( torchlightsFlickerAmounts/*[i] <= -10000.0)
+            torchlightsFlickerAmounts/*[i] += 100 * Math.sin(delta) * Math.random();
+        else if ( torchlightsFlickerAmounts/*[i] >= 10000.0)
+            torchlightsFlickerAmounts/*[i]  -= 100 * Math.sin(delta) * Math.random();*/
+    if (flag2 == 0)
+        torchlightsFlickerAmounts/*[i]*/  += 0.5*Math.cos(Math.PI/(Math.random()*4))*Math.sin(delta) * Math.random();
+    else
+        torchlightsFlickerAmounts/*[i]*/  -= 0.5*Math.sin(delta) * Math.random();
+    if (torchlightsFlickerAmounts/*[i]*/*Math.random() <= 0.6)
+        flag2 = 0;
+    else if (torchlightsFlickerAmounts/*[i]*/*Math.random() >= 1.3)
+        flag2 = 1;
+    //}
+    return  torchlightsFlickerAmounts;
 }
 
 
@@ -161,6 +177,7 @@ function loadIlluminationParamsFromModel(loadedModel) {
             torchlightsPositions.push(position[0])
             torchlightsPositions.push(position[1])
             torchlightsPositions.push(position[2])
+            n_torches++;
         }
     }
 }

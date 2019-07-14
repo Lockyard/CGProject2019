@@ -39,6 +39,7 @@ var torchlightPositionHandle;
 var torchlightColorHandle;
 var torchlightDecayHandle;
 var torchlightTargetHandle;
+var torchlightsFlickerHandle;
 
 var	eyePositionHandle;
 var eyeDirectionHandle
@@ -191,6 +192,7 @@ function loadShaders(){
         torchlightColorHandle       = gl.getUniformLocation(shaderProgram, 'torchlightColor');
         torchlightDecayHandle       = gl.getUniformLocation(shaderProgram, 'torchlightDecay');
         torchlightTargetHandle      = gl.getUniformLocation(shaderProgram, 'torchlightTarget');
+        torchlightsFlickerHandle    = gl.getUniformLocation(shaderProgram, 'torchlightFlickerAmt');
 
         //lightUpObjectHandle = gl.getAttribLocation(shaderProgram, 'inLightUpObject');
         lightUpObjectHandle = gl.getUniformLocation(shaderProgram, 'fsLightUpObject');
@@ -484,6 +486,7 @@ function drawScene(){
 
         //torch uniforms
         gl.uniform3fv(torchlightPositionHandle, torchlightsPositions);
+        gl.uniform1f(torchlightsFlickerHandle, updateLightParams());
 
         gl.uniform4f(torchlightColorHandle, torchlightColor[0],
             torchlightColor[1],
@@ -503,6 +506,7 @@ function drawScene(){
             observerDirectionObj[i][2]);
 
         illuminateReachableObjects(i); //illumination.js
+
 
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufferObjectId[i]);
 
