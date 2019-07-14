@@ -31,7 +31,7 @@ var currentLightType = 1
 var torchlightsPositions = new Array()
 var torchlightColor = new Float32Array([1.0, 0.7, 0.1, 1.0]);
 var torchlightDecay = 1.5
-var torchlightTarget = 0.3
+var torchlightTarget = 0.5
 
 //all these arrays are used to check if something is reachable/carried. Are initialized in the load from model function and use indices
 //bound to the element number they refer to

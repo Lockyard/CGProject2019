@@ -3,7 +3,7 @@ precision mediump float;
 
 const float PI = 3.14159265358979;
 //distance above which the light from a torch must not be calculated, for performance
-const float TORCH_CALC_DISTANCE_THRESHOLD = 3.0;
+const float TORCH_CALC_DISTANCE_THRESHOLD = 6.0;
 
 uniform vec4 mDiffColor;
 uniform vec4 mSpecColor;            
@@ -44,15 +44,19 @@ out vec4 outColor;
 uniform float fsLightUpObject;
 uniform float lightUpPercentage;
 
-vec4 torchlightContribution(int i) {
+//get the color value with a percentage of their intensity to be used, wrt white
+vec4 partialColor(vec4 color, float percentage) {
+	float invPerc = 1.0 - percentage;
+	return color*percentage + vec4(invPerc, invPerc, invPerc, invPerc);
+}
+
+vec4 torchlightContribution(int i, vec4 textColor) {
 	vec3 lx = normalize(torchlightPosition[i] - fsPosition);
 	float decay = pow((torchlightTarget / length(torchlightPosition[i] - fsPosition)), torchlightDecay);
 	vec4 pointLight = torchlightColor * decay;
-	vec4 lambertDiff = mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
-	//specular could be calculated but would result in no visual change (walls don't reflect much)
+	vec4 lambertDiff = partialColor(textColor, 0.3)* mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
     vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);
-	return clamp(pointLight*(lambertDiff + blinnSpec), 0.0, 0.8);
-	//return clamp(pointLight*(lambertDiff), 0.0, 0.8);
+	return clamp(pointLight*(lambertDiff + blinnSpec), 0.0, 1.0);
 }
 
 void main() { 
@@ -70,7 +74,7 @@ void main() {
 	vec4 lambertDiff = diffuseTextureColorMixture * mDiffColor * clamp( dot(lx, fsNormal),0.0,1.0);
     vec4 blinnSpec = mSpecColor * pow(clamp(dot(fsNormal, normalize(lx + eyeDirection)), 0.0, 1.0), mSpecPower);
 
-	vec4 ambient = (diffuseTextureColorMixture*0.5 + vec4(0.5, 0.5, 0.5, 0.5)) * ambientLightColor * ambientLightInfluence;
+	vec4 ambient = partialColor(diffuseTextureColorMixture, 0.5) * ambientLightColor * ambientLightInfluence;
 
 	vec4 lightUp;
 
@@ -87,7 +91,7 @@ void main() {
 
 	for(int i=0;i< 13; i++) {
 		if(length(torchlightPosition[i] - fsPosition) < TORCH_CALC_DISTANCE_THRESHOLD) {
-			mainColor += torchlightContribution(i);
+			mainColor += torchlightContribution(i, diffuseTextureColorMixture);
 		}
 	}
 
