@@ -37,8 +37,8 @@ const DOOR_OPEN_RATIO_PASS = 0.5 // the percentage of opening action of the door
 const LEVER_ALPHA_SPEED = 1.7
 
 //pick speed in term of alpha of the key and y offset for final location of key (should finish under the camera for a "picked" effect)
-const KEY_ALPHA_PICK_SPEED = 0.2
-const KEY_PICK_Y_OFFSET = 0.2
+const KEY_ALPHA_PICK_SPEED = 0.9
+const KEY_PICK_Y_OFFSET = 0.12
 
 //item univoque names
 const ITEM_NAME_KEY = 'key'
@@ -334,9 +334,9 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
                 this.y = -0.2
                 this.z = this.startZ
             } else { //else compute the new x,y,z, which approach the player
-                this.x = utils.middleValueAlpha(this.x, px, this.alphaPicked)
-                this.y = utils.middleValueAlpha(this.y, py - KEY_PICK_Y_OFFSET, this.alphaPicked)
-                this.z = utils.middleValueAlpha(this.z, pz, this.alphaPicked)
+                this.x = utils.middleValueAlpha(this.startX, px, this.alphaPicked)
+                this.y = utils.middleValueAlpha(this.startY, py - KEY_PICK_Y_OFFSET, this.alphaPicked)
+                this.z = utils.middleValueAlpha(this.startZ, pz, this.alphaPicked)
             }
         }
     }

@@ -58,7 +58,9 @@ function updateAnimations() {
     //update keys
     for (let i=0; i< keys.length; i++) {
         if(keys[i].isInAnimation) {
-            keys[i].node.localMatrix = utils.MakeTranslateMatrix(keys[i].relativeX(), keys[i].relativeY(), keys[i].relativeZ())
+            let zeroMatrix = utils.MakeTranslateMatrix(-keys[i].startX, -keys[i].startY, -keys[i].startZ)
+            zeroMatrix = utils.multiplyMatrices(utils.MakeScaleMatrix(1.1-keys[i].alphaPicked), zeroMatrix)
+            keys[i].node.localMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(keys[i].x, keys[i].y, keys[i].z),zeroMatrix)
         }
     }
 
