@@ -58,9 +58,29 @@ function updateAnimations() {
     //update keys
     for (let i=0; i< keys.length; i++) {
         if(keys[i].isInAnimation) {
-            let zeroMatrix = utils.MakeTranslateMatrix(-keys[i].startX, -keys[i].startY, -keys[i].startZ)
-            zeroMatrix = utils.multiplyMatrices(utils.MakeScaleMatrix(1.1-keys[i].alphaPicked), zeroMatrix)
-            keys[i].node.localMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(keys[i].x, keys[i].y, keys[i].z),zeroMatrix)
+            //anim. 1: key picked up
+            if(keys[i].animationNum == 1) {
+                let zeroMatrix = utils.MakeTranslateMatrix(-keys[i].startX, -keys[i].startY, -keys[i].startZ)
+                zeroMatrix = utils.multiplyMatrices(utils.MakeScaleMatrix(1.1-keys[i].alphaAnimation), zeroMatrix)
+                keys[i].node.localMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(keys[i].x, keys[i].y, keys[i].z),zeroMatrix)
+            }
+            //anim. 2: key going into door
+            else if(keys[i].animationNum == 2) {
+                let zeroMatrix = utils.MakeTranslateMatrix(-keys[i].startX, -keys[i].startY, -keys[i].startZ)
+                let rotMatrix
+                let transAnimationMatrix
+                if(keys[i].keyhole.faceDirection == 0) { //north: rotate on x then y
+                    rotMatrix = utils.multiplyMatrices(utils.MakeRotateYMatrix(270.0), utils.MakeRotateXMatrix(90.0))
+                } else if(keys[i].keyhole.faceDirection == 3) { //north: rotate on x
+                    rotMatrix = utils.MakeRotateXMatrix(90.0)
+                    
+                }
+                else {//the other cases are not considered only because there are no doors facing 2 and 1. It should be done in general
+                    rotMatrix = utils.identityMatrix()
+                    transAnimationMatrix = utils.identityMatrix()
+                }
+                
+            }
         }
     }
 
@@ -115,6 +135,20 @@ function updateAnimations() {
         levers[i].node.localMatrix = zeroMatrix
     }
 
+}
+
+
+
+/**
+*	Implementation of a simple Bezier of degree 3
+*/
+function Bezier3(x0, x1, x2, x3, alpha) {
+    let x01 = lerp(x0, x1, alpha)
+    let x12 = lerp(x1, x2, alpha)
+    let x23 = lerp(x2, x3, alpha)
+    let x012 = lerp(x01, x12, alpha)
+    let x123 = lerp(x12, x23, alpha)
+    return lerp(x012, x123, alpha)
 }
 
 

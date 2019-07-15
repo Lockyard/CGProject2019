@@ -38,7 +38,10 @@ const LEVER_ALPHA_SPEED = 1.7
 
 //pick speed in term of alpha of the key and y offset for final location of key (should finish under the camera for a "picked" effect)
 const KEY_ALPHA_PICK_SPEED = 0.9
+const KEY_ALPHA_ANIM2_SPEED = 1.0
+const KEY_ALPHA_ANIM3_SPEED = 1.0
 const KEY_PICK_Y_OFFSET = 0.12
+const KEY_ANIM2_OFFSET = 0.2
 
 //item univoque names
 const ITEM_NAME_KEY = 'key'
@@ -241,6 +244,7 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
     this.number = number
     this.isPickedUp = isPickedUp || false
     this.type = type
+
     //boundaries: divided in vertical and horizontal. the horizontal define the bottom of the box which is the hitbox of the lever
     this.x0 = x0
     this.x1 = x1
@@ -257,11 +261,15 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
     this.y = this.startY
     this.z = this.startZ
 
-    this.alphaPicked = 0.0
+    this.alphaAnimation = 0.0
     this.isInAnimation = false
+    //animation number: 1=picked up animation. 2=going to keyhole animation. 3=rotationg in keyhole animation
+    this.animationNum = 0
 
     //node for animation in scenegraph. It's bound and used in the animation section
     this.node = undefined
+    //the keyhole will be used for animations. Is set from the keyhole which will consume the key
+    this.keyhole = undefined
 
     //check if this key is reachable from given position and angles with a reach length. False if has already been picked up
     this.isReachable = function(x, y, z, angleH, angleV, reach) {
@@ -312,9 +320,10 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
 
         this.isPickedUp = true
         this.isInAnimation = true
+        this.animationNum = 1
         
-        //push a new key item in the inventory
-        inventory.push(new Item(ITEM_NAME_KEY, this.number, this.type))
+        //push a new key item in the inventory with a reference to itself
+        inventory.push(new Item(ITEM_NAME_KEY, this.number, this.type, this))
         displayInventory()
     }
 
@@ -323,34 +332,59 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
      */
     this.update = function(delta, px, py, pz) {
         if(this.isInAnimation) {
-            if(this.alphaPicked == 1.0) {
-                this.isInAnimation = false
-                return
-            }
-            this.alphaPicked = Math.min(1.0, this.alphaPicked + delta*KEY_ALPHA_PICK_SPEED)
-            
-            if(this.alphaPicked == 1.0) { //if alpha after moving is at 1, set position under the dungeon
-                this.x = this.startX
-                this.y = -0.2
-                this.z = this.startZ
-            } else { //else compute the new x,y,z, which approach the player
-                this.x = utils.middleValueAlpha(this.startX, px, this.alphaPicked)
-                this.y = utils.middleValueAlpha(this.startY, py - KEY_PICK_Y_OFFSET, this.alphaPicked)
-                this.z = utils.middleValueAlpha(this.startZ, pz, this.alphaPicked)
-            }
+            //animation 1, picking up the key
+            if(this.animationNum == 1) {
+                if(this.alphaAnimation == 1.0) {
+                    this.isInAnimation = false
+                    return
+                }
+                this.alphaAnimation = Math.min(1.0, this.alphaAnimation + delta*KEY_ALPHA_PICK_SPEED)
+                
+                if(this.alphaAnimation == 1.0) { //if alpha after moving is at 1, set position under the dungeon
+                    this.x = this.startX
+                    this.y = -0.2
+                    this.z = this.startZ
+                } else { //else compute the new x,y,z, which approach the player
+                    this.x = utils.middleValueAlpha(this.startX, px, this.alphaAnimation)
+                    this.y = utils.middleValueAlpha(this.startY, py - KEY_PICK_Y_OFFSET, this.alphaAnimation)
+                    this.z = utils.middleValueAlpha(this.startZ, pz, this.alphaAnimation)
+                }
+            } else  //anim. 2, going to keyhole
+                if(this.animationNum == 2) {
+                    if(this.alphaAnimation == 1.0) {
+                        this.startAnimation(3)
+                        return
+                    }
+                    this.alphaAnimation = Math.min(1.0, this.alphaAnimation + delta*KEY_ALPHA_ANIM2_SPEED)
+                }
+            else    //anim. 3, rotating in keyhole
+                if(this.animationNum == 3) {
+                    if(this.alphaAnimation == 1.0) {
+                        this.isInAnimation = false
+                        this.keyhole.door.open()
+                        return
+                    }
+                    this.alphaAnimation = Math.min(1.0, this.alphaAnimation + delta*KEY_ALPHA_ANIM3_SPEED)
+                }
         }
     }
 
-    this.relativeX = function() {
-        return this.x - this.startX
-    }
-
-    this.relativeY = function() {
-        return this.y - this.startY
-    }
-
-    this.relativeZ = function() {
-        return this.z - this.startZ
+    this.startAnimation = function(animationNum) {
+        this.isInAnimation = true
+        this.alphaAnimation = 0.0
+        this.animationNum = animationNum
+        if(animationNum == 2) {
+            switch (this.keyhole.faceDirection) {
+                case 0: //north
+                    this.x = this.keyhole.x
+                    this.z = this.keyhole.z - KEY_ANIM2_OFFSET
+                    break
+                case 3: //west
+                    this.x = this.keyhole.x - KEY_ANIM2_OFFSET
+                    this.z = this.keyhole.z
+                    break
+            }
+        }
     }
 }
 
@@ -380,6 +414,13 @@ var Keyhole = function(door, isOpened, type, x0, x1, y0, y1, z0, z1) {
     this.y1 = y1
     this.z0 = z0
     this.z1 = z1
+
+    this.x = (x1+x0)/2
+    this.y = (y1+y0)/2
+    this.z = (z1+z0)/2
+    
+    this.faceDirection = undefined //is set down
+    
 
     //node for animation in scenegraph. It's bound and used in the animation section
     this.node = undefined
@@ -428,17 +469,51 @@ var Keyhole = function(door, isOpened, type, x0, x1, y0, y1, z0, z1) {
     this.openUp = function() {
         if (this.isOpened)
             return
-        //if the key is in the inventory, remove it and open the keyhole. otherwise do nothing
+        //if the key is in the inventory, remove it and start the animation to open the keyhole. otherwise do nothing
         for (let i = 0; i < inventory.length; i++) {
             if(inventory[i].name == ITEM_NAME_KEY && inventory[i].value == this.door.number) {
                 this.isOpened = true
-                this.door.open()
+                inventory[i].element.keyhole = this
+                inventory[i].element.startAnimation(2)
                 inventory.splice(i, 1) //remove the key from inventory
                 displayInventory()
             }
         }
 
     }
+
+    this.getFaceDirectionFromCoords = function() {
+        let ax = Math.abs(this.x % 1)
+        let az = Math.abs(this.z % 1)
+        if (ax < 0.5) { //right side of tile
+            if(az < 0.5) {  //bottom right side of tile
+                if(ax > az)
+                    return 2    //face south
+                else
+                    return 1    //face east
+            } else {  //top right side of tile
+                if(ax > 1 - az)
+                    return 0    //face north
+                else
+                    return 1    //face east
+            }
+        } else {    //left side of tile
+            if(az < 0.5) {  //bottom left side of tile
+                if(1 - ax > az)
+                    return 2    //face south
+                else
+                    return 3    //face west
+            } else {  //top left side of tile
+                if(1 - ax > 1 - az)
+                    return 0    //face north
+                else
+                    return 3    //face west
+            }
+        }
+    }
+
+    //deduce the face direction from coordinates
+    this.faceDirection = this.getFaceDirectionFromCoords()
 }
 
 
@@ -447,10 +522,11 @@ var Keyhole = function(door, isOpened, type, x0, x1, y0, y1, z0, z1) {
  * @param {Item's name} name 
  * @param {Item's value, useful for some type of item} value 
  */
-var Item = function(name, value, type) {
+var Item = function(name, value, type, element) {
     this.name = name
     this.value = value
     this.type = type
+    this.element = element
 
     this.itemString = function itemString() {
         return "("+this.type+" "+this.name+")"
