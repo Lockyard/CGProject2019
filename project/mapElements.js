@@ -34,6 +34,8 @@ const DOOR_TARGET_Y_CLOSED = 0.0
 const DOOR_OPENING_SPEED = 0.25
 const DOOR_OPEN_RATIO_PASS = 0.5 // the percentage of opening action of the door above which the player can pass through it
 
+const LEVER_ROT_SPEED = 0.9
+
 //item univoque names
 const ITEM_NAME_KEY = 'key'
 
@@ -132,7 +134,7 @@ var Door = function(number, isOpen, tile) {
  * @param {*} z0 
  * @param {*} z1 
  */
-var Lever = function(number, isActivated, x0, x1, y0, y1, z0, z1) {
+var Lever = function(number, isActivated, x0, x1, y0, y1, z0, z1, centerPosition) {
     this.number = number
     this.isActivated = isActivated || false
     //boundaries: divided in vertical and horizontal. the horizontal define the bottom of the box which is the hitbox of the lever
@@ -142,19 +144,43 @@ var Lever = function(number, isActivated, x0, x1, y0, y1, z0, z1) {
     this.y1 = y1
     this.z0 = z0
     this.z1 = z1
+    //position of the center of rotation of this lever. make an average of hitbox if not provided (should be provided though)
+    this.centerPosition = centerPosition || [(x1+x0)/2, (y1+y0)/2, (z1+z0)/2]
+    /**
+     * calculate the face direction based on the bounds and the centerPosition. As for tiles, directions are 0,1,2,3 -> north, east, south, west
+     */
+    this.faceDirection =    centerPosition[0] > (x1+x0)/2 ? 3 : //west
+                            centerPosition[0] < (x1+x0)/2 ? 1 : //east
+                            centerPosition[2] > (z1+z0)/2 ? 0 : //north
+                                                            2   //south (default)
+
+    //alpha for the rotation animation, from 0 to 1
+    this.alphaRotation = this.isActivated ? 1.0 : 0.0
 
     //node for animation in scenegraph. It's bound and used in the animation section
     this.node = undefined
 
     //change the lever's status active/inactive, and activate the corresponding doors with same number (array)
     this.activate = function(doors) {
-        isActivated = !isActivated
+        this.isActivated = !this.isActivated
         for (let i = 0; i < doors.length; i++) {
             if(doors[i].number == this.number) {
-                isActivated ? doors[i].openIfNumber(number) : doors[i].closeIfNumber(number)
+                this.isActivated ? doors[i].openIfNumber(this.number) : doors[i].closeIfNumber(this.number)
                 document.getElementById("debugLevers").innerText = "The lever activated door #" + doors[i].number + "!"
             }
         }    
+    }
+
+
+    this.update = function(delta) {
+        //if is rotating update its alpha
+        if((this.alphaRotation < 1.0 && this.isActivated) || (this.alphaRotation > 0.0 && !this.isActivated)) {
+            if(this.isActivated)  //if activated and rotating, increase alpha
+                this.alphaRotation = Math.min(1.0, this.alphaRotation + delta*LEVER_ROT_SPEED)
+            else
+                this.alphaRotation = Math.max(0.0, this.alphaRotation - delta*LEVER_ROT_SPEED)
+        }
+        
     }
 
     //check if this lever is reachable from given position and angles with a reach length

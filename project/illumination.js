@@ -23,7 +23,7 @@ var lightConeOut = 30.0;
 var lightDecay = 1.0
 var lightTarget = 1.0
 
-var currentLightType = 1
+var currentLightType = 2
 
 //params for fire lights of torches
 var torchlightsPositions = new Array()

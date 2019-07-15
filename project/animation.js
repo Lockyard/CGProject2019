@@ -1,3 +1,4 @@
+const LEVER_ROT_ANGLE = 90.0 //degrees
 
 //arrays used only for animation
 var torchNodes = []
@@ -50,13 +51,35 @@ function updateAnimations() {
         doors[i].node.localMatrix = utils.MakeTranslateMatrix(0, doors[i].yOpen, 0)
     }
 
-    //update the alpha for the scale
+    //update the scale
     for (let i = 0; i < torchNodes.length; i++) {
         //move flame to (0,0,0) position, scale it and move again to original position
         let zeroMatrix = utils.MakeTranslateMatrix(-torchlightsPositions[i*3], -torchlightsPositions[i*3+1], -torchlightsPositions[i*3+2])
         zeroMatrix = utils.multiplyMatrices(utils.MakeScaleMatrix(torchlightsFlickerAmounts || 1), zeroMatrix)
         zeroMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(torchlightsPositions[i*3], torchlightsPositions[i*3+1], torchlightsPositions[i*3+2]), zeroMatrix)
         torchNodes[i].localMatrix = zeroMatrix
+    }
+
+    //update levers
+    for (let i=0; i<levers.length; i++) {
+        let zeroMatrix = utils.MakeTranslateMatrix(-levers[i].centerPosition[0], -levers[i].centerPosition[1], -levers[i].centerPosition[2])
+        let rotMatrix
+        switch (levers[i].faceDirection) {
+            case 0: //north
+                rotMatrix = utils.MakeRotateXMatrix(-levers[i].alphaRotation*LEVER_ROT_ANGLE)
+                break
+            case 1: //east
+                rotMatrix = utils.MakeRotateZMatrix(levers[i].alphaRotation*LEVER_ROT_ANGLE)
+                break
+            case 2: //south
+                rotMatrix = utils.MakeRotateXMatrix(levers[i].alphaRotation*LEVER_ROT_ANGLE)
+                break
+            case 3: //west
+                rotMatrix = utils.MakeRotateZMatrix(-levers[i].alphaRotation*LEVER_ROT_ANGLE)
+        }
+        zeroMatrix = utils.multiplyMatrices(rotMatrix, zeroMatrix)
+        zeroMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(levers[i].centerPosition[0], levers[i].centerPosition[1], levers[i].centerPosition[2]), zeroMatrix)
+        levers[i].node.localMatrix = zeroMatrix
     }
 
 }

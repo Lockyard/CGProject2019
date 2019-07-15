@@ -85,13 +85,19 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
 
     //check if levers and keys and stuff are reachable (just to print it under canvas, not really useful)
     let allUnreachables = true;
+
+    //update levers
     for (let i = 0; i < levers.length; i++) {
+        levers[i].update(delta)
+
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Lever "+levers[i].number+" reachable!"
             allUnreachables = false
             reachableLever[levers[i].number] = true; //parameter to simplify checks in illumination.js
         }else reachableLever[levers[i].number] = false; //parameter to simplify checks in illumination.js
     }
+
+    //update keys
     for (let i = 0; i < keys.length; i++) {
         if(keys[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Key "+keys[i].number+" reachable!"
@@ -99,6 +105,8 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
             reachableKey[keys[i].number] = true; //parameter to simplify checks in illumination.js
         }else reachableKey[keys[i].number] = false; //parameter to simplify checks in illumination.js
     }
+
+    //update keyholes
     for (let i = 0; i < keyholes.length; i++) {
         if(keyholes[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Keyhole "+keyholes[i].door.number+" reachable!"
@@ -335,8 +343,10 @@ function loadElementsFromModel(loadedModel) {
             let leverNum = parseInt(oname.split('_')[0].substring(5))
             console.log("lever found! ->"+oname+ ", number: "+leverNum)
             let bounds = getMinMaxAxisBounds(loadedModel.meshes[i].vertices) //calculate bounds
-            levers.push(new Lever(leverNum, false, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]))
-            console.log("added lever with bounds: " + bounds)
+            //calculate center
+            let center = getLeverCenterFromBoundsAndVertices(loadedModel.meshes[i].vertices, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5])
+            levers.push(new Lever(leverNum, false, bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], center))
+            console.log("added lever with bounds: " + bounds + ", and center: " + center)
         }
         //if it's a keyhole
          else if(oname.startsWith('keyhole')) {
@@ -397,3 +407,72 @@ function getMinMaxAxisBounds(array3x) {
     return minMaxA
 }
 
+
+/**
+ * Calculate the center of the lever based on the vertices and calculated bounds
+ * @param {The array of vertices} array3x 
+ * @param {low x} x0 
+ * @param {high x} x1 
+ * @param {low y} y0 
+ * @param {high y} y1 
+ * @param {low z} z0 
+ * @param {high z} z1 
+ */
+function getLeverCenterFromBoundsAndVertices(array3x, x0, x1, y0, y1, z0, z1) {
+    /*kinda hacky method to extract the center of the lever:
+    *find a yCap which is 2/3 of height of lever, to exclude all points above that point(which are the ones composing the ball of the lever)
+    *then find the x/z coord which is the most outside to identify all points which stay on the same circle.
+    *finally compute the average on each one of them, and find the circle center. First check if this must be done on x or z axis
+    */
+    let yCap = (y1*2+y0)/3
+    //lever oriented horizontally
+    if(x1-x0 > z1-z0) {
+        let zMin = Number.MAX_SAFE_INTEGER
+        let zMax = Number.MIN_SAFE_INTEGER
+        //calculate zMax and zMin
+        for (let i = 0; i < array3x.length; i+=3) {
+            if (array3x[i+1] < yCap) {
+                if(array3x[i+2] < zMin) zMin = array3x[i+2]
+                else if(array3x[i+2] > zMax) zMax = array3x[i+2]
+            }
+        }
+        let xAvg=0, yAvg=0
+        let n=0
+        //calculate the x and y average on the circle points
+        for (let i = 0; i < array3x.length; i+=3) {
+            //calculations on zMin, but should be the same
+            if (array3x[i+2] == zMin && array3x[i+1] < yCap) {
+                n++
+                xAvg = xAvg*((n-1)/n) + array3x[i]/n
+                yAvg = yAvg*((n-1)/n) + array3x[i+1]/n
+            }
+        }
+        //final center point should be in the averages for x and y, and avg of the 2 z for z
+        return [xAvg, yAvg, (zMax+zMin)/2]
+    }
+    //lever oriented vertically 
+    else {
+        let xMin = Number.MAX_SAFE_INTEGER
+        let xMax = Number.MIN_SAFE_INTEGER
+        //calculate xMax and xMin
+        for (let i = 0; i < array3x.length; i+=3) {
+            if (array3x[i+1] < yCap) {
+                if(array3x[i] < xMin) xMin = array3x[i]
+                else if(array3x[i] > xMax) xMax = array3x[i]
+            }
+        }
+        let zAvg=0, yAvg=0
+        let n=0
+        //calculate the x and y average on the circle points
+        for (let i = 0; i < array3x.length; i+=3) {
+            //calculations on xMin, but should be the same
+            if (array3x[i] == xMin && array3x[i+1] < yCap) {
+                n++
+                zAvg = zAvg*((n-1)/n) + array3x[i+2]/n
+                yAvg = yAvg*((n-1)/n) + array3x[i+1]/n
+            }
+        }
+        //final center point should be in the averages for x and y, and avg of the 2 z for z
+        return [(xMax+xMin)/2, yAvg, zAvg]
+    }
+}
