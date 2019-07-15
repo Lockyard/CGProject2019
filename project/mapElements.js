@@ -34,7 +34,7 @@ const DOOR_TARGET_Y_CLOSED = 0.0
 const DOOR_OPENING_SPEED = 0.25
 const DOOR_OPEN_RATIO_PASS = 0.5 // the percentage of opening action of the door above which the player can pass through it
 
-const LEVER_ROT_SPEED = 0.9
+const LEVER_ALPHA_SPEED = 1.7
 
 //item univoque names
 const ITEM_NAME_KEY = 'key'
@@ -176,9 +176,9 @@ var Lever = function(number, isActivated, x0, x1, y0, y1, z0, z1, centerPosition
         //if is rotating update its alpha
         if((this.alphaRotation < 1.0 && this.isActivated) || (this.alphaRotation > 0.0 && !this.isActivated)) {
             if(this.isActivated)  //if activated and rotating, increase alpha
-                this.alphaRotation = Math.min(1.0, this.alphaRotation + delta*LEVER_ROT_SPEED)
+                this.alphaRotation = Math.min(1.0, this.alphaRotation + delta*LEVER_ALPHA_SPEED)
             else
-                this.alphaRotation = Math.max(0.0, this.alphaRotation - delta*LEVER_ROT_SPEED)
+                this.alphaRotation = Math.max(0.0, this.alphaRotation - delta*LEVER_ALPHA_SPEED)
         }
         
     }
