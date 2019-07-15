@@ -24,6 +24,7 @@ var ambientLightColorHandle;
 
 var matrixPositionHandle;
 var worldMatrixHandle;
+var normalMatrixHandle;
 var	materialDiffColorHandle;
 //player's light params
 var lightPositionHandle;
@@ -165,6 +166,7 @@ function loadShaders(){
 
         matrixPositionHandle = gl.getUniformLocation(shaderProgram, 'wvpMatrix');
         worldMatrixHandle = gl.getUniformLocation(shaderProgram, 'worldMatrix');
+        normalMatrixHandle = gl.getUniformLocation(shaderProgram, 'normalMatrix');
 
         materialDiffColorHandle = gl.getUniformLocation(shaderProgram, 'mDiffColor');
         materialSpecColorHandle = gl.getUniformLocation(shaderProgram, 'mSpecColor');
@@ -402,13 +404,13 @@ function computeMatrices(){
         projectionMatrix[i] = utils.multiplyMatrices(viewMatrix, nodes[i].worldMatrix);
         projectionMatrix[i] = utils.multiplyMatrices(perspectiveMatrix, projectionMatrix[i]);
 
-        lightDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(nodes[i].worldMatrix)), lightDirection);
+        lightDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), lightDirection);
 
-        lightPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(nodes[i].worldMatrix)),lanternPos);
+        lightPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])),lanternPos);
 
-        observerPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(nodes[i].worldMatrix)), eyeTemp);
+        observerPositionObj[i] = utils.multiplyMatrix3Vector3(utils.invertMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), eyeTemp);
 
-        observerDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(nodes[i].worldMatrix)), observerDirection);
+        observerDirectionObj[i] = utils.multiplyMatrix3Vector3(utils.transposeMatrix3(utils.sub3x3from4x4(objectWorldMatrix[i])), observerDirection);
     }
 
 }
@@ -432,6 +434,8 @@ function drawScene(){
         gl.uniformMatrix4fv(matrixPositionHandle, gl.FALSE, utils.transposeMatrix(projectionMatrix[i]));
 
         gl.uniformMatrix4fv(worldMatrixHandle, gl.FALSE, utils.transposeMatrix(nodes[i].worldMatrix));
+
+        gl.uniformMatrix4fv(normalMatrixHandle, gl.FALSE, utils.transposeMatrix(utils.invertMatrix(utils.transposeMatrix(nodes[i].worldMatrix))))
 
         gl.uniform1f(ambientLightInfluenceHandle, ambientLightInfluence);
 
