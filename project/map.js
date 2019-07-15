@@ -88,6 +88,7 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
 
     //update levers
     for (let i = 0; i < levers.length; i++) {
+
         levers[i].update(delta)
 
         if(levers[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
@@ -99,6 +100,9 @@ function updateMap(delta, pX, pY, pZ, pHA, pVA) {
 
     //update keys
     for (let i = 0; i < keys.length; i++) {
+
+        keys[i].update(delta, pX, pY, pZ)
+
         if(keys[i].isReachable(pX, pY, pZ, pHA, pVA, PLAYER_REACH)) {
             document.getElementById("debugElements").innerText = "Key "+keys[i].number+" reachable!"
             allUnreachables = false

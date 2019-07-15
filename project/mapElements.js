@@ -36,6 +36,10 @@ const DOOR_OPEN_RATIO_PASS = 0.5 // the percentage of opening action of the door
 
 const LEVER_ALPHA_SPEED = 1.7
 
+//pick speed in term of alpha of the key and y offset for final location of key (should finish under the camera for a "picked" effect)
+const KEY_ALPHA_PICK_SPEED = 0.2
+const KEY_PICK_Y_OFFSET = 0.2
+
 //item univoque names
 const ITEM_NAME_KEY = 'key'
 
@@ -245,11 +249,24 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
     this.z0 = z0
     this.z1 = z1
 
+    this.startX = (x1+x0)/2
+    this.startY = (y1+y0)/2
+    this.startZ = (z1+z0)/2
+
+    this.x = this.startX
+    this.y = this.startY
+    this.z = this.startZ
+
+    this.alphaPicked = 0.0
+    this.isInAnimation = false
+
     //node for animation in scenegraph. It's bound and used in the animation section
     this.node = undefined
 
-    //check if this key is reachable from given position and angles with a reach length
+    //check if this key is reachable from given position and angles with a reach length. False if has already been picked up
     this.isReachable = function(x, y, z, angleH, angleV, reach) {
+        if(this.isPickedUp)
+            return false
         //check on y
         let reachY = Math.sin(utils.degToRad(angleV))*reach
         if(reachY >= 0) {
@@ -294,10 +311,46 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
             return
 
         this.isPickedUp = true
+        this.isInAnimation = true
         
         //push a new key item in the inventory
         inventory.push(new Item(ITEM_NAME_KEY, this.number, this.type))
         displayInventory()
+    }
+
+    /**
+     * Update the key, with player positions values also
+     */
+    this.update = function(delta, px, py, pz) {
+        if(this.isInAnimation) {
+            if(this.alphaPicked == 1.0) {
+                this.isInAnimation = false
+                return
+            }
+            this.alphaPicked = Math.min(1.0, this.alphaPicked + delta*KEY_ALPHA_PICK_SPEED)
+            
+            if(this.alphaPicked == 1.0) { //if alpha after moving is at 1, set position under the dungeon
+                this.x = this.startX
+                this.y = -0.2
+                this.z = this.startZ
+            } else { //else compute the new x,y,z, which approach the player
+                this.x = utils.middleValueAlpha(this.x, px, this.alphaPicked)
+                this.y = utils.middleValueAlpha(this.y, py - KEY_PICK_Y_OFFSET, this.alphaPicked)
+                this.z = utils.middleValueAlpha(this.z, pz, this.alphaPicked)
+            }
+        }
+    }
+
+    this.relativeX = function() {
+        return this.x - this.startX
+    }
+
+    this.relativeY = function() {
+        return this.y - this.startY
+    }
+
+    this.relativeZ = function() {
+        return this.z - this.startZ
     }
 }
 

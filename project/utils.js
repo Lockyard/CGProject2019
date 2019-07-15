@@ -729,6 +729,16 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 			mean[2]	=	mean[2]*((n-1)/n) + array3x[i+2]/n
 		}
 		return mean
+	},
+
+	/**
+	 * Get a middle value between v0 and v1, in percentage alpha (alpha=0 -> v0, alpha=1 -> v1)
+	 * @param {*} v0 
+	 * @param {*} v1 
+	 * @param {*} alpha 
+	 */
+	middleValueAlpha:function(v0, v1, alpha) {
+		return (1-alpha)*v0+alpha*v1
 	}
 }
 

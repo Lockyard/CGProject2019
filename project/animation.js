@@ -55,7 +55,14 @@ function updateAnimations() {
         doors[i].node.localMatrix = utils.MakeTranslateMatrix(0, doors[i].yOpen, 0)
     }
 
-    //update the scale
+    //update keys
+    for (let i=0; i< keys.length; i++) {
+        if(keys[i].isInAnimation) {
+            keys[i].node.localMatrix = utils.MakeTranslateMatrix(keys[i].relativeX(), keys[i].relativeY(), keys[i].relativeZ())
+        }
+    }
+
+    //update the scale of torch flames
     for (let i = 0; i < torchNodes.length; i++) {
         //move flame to (0,0,0) position, scale it and move again to original position
         let zeroMatrix = utils.MakeTranslateMatrix(-torchlightsPositions[i*3], -torchlightsPositions[i*3+1], -torchlightsPositions[i*3+2])
