@@ -33,6 +33,8 @@ var torchlightTarget = 0.5
 var n_torches = 0;
 //array of floats of [0, 1] values, indicate the amount of flicker of the light of each torch
 var torchlightsFlickerAmounts = 1.0//= new Array()
+const TORCH_MIN_FLICKER = 0.6
+const TORCH_MAX_FLICKER = 1.3
 
 //all these arrays are used to check if something is reachable/carried. Are initialized in the load from model function and use indices
 //bound to the element number they refer to
@@ -94,9 +96,9 @@ function updateLightParams() {
         torchlightsFlickerAmounts/*[i]*/  += 0.5*Math.cos(Math.PI/(Math.random()*4))*Math.sin(delta) * Math.random();
     else
         torchlightsFlickerAmounts/*[i]*/  -= 0.5*Math.sin(delta) * Math.random();
-    if (torchlightsFlickerAmounts/*[i]*/*Math.random() <= 0.6)
+    if (torchlightsFlickerAmounts/*[i]*/*Math.random() <= TORCH_MIN_FLICKER)
         flag2 = 0;
-    else if (torchlightsFlickerAmounts/*[i]*/*Math.random() >= 1.3)
+    else if (torchlightsFlickerAmounts/*[i]*/*Math.random() >= TORCH_MAX_FLICKER)
         flag2 = 1;
     //}
     return  torchlightsFlickerAmounts;
