@@ -21,46 +21,26 @@ function anim(cx, cy, cz, qx, qy, qz, qw, alpha) {
 		return a*(1-alpha) + b*alpha;
 	}
 
-	//spherical linear interpolation for quaternions
-	function slerp(a, b, alpha){
-		let theta = 0;
-		for(i=0; i<4;i++){
-			theta += a[i]*b[i];
-		}
-		theta = 2 * Math.acos(Math.min(MAX_ACOS, theta));
-
-		let par1 = Math.sin((1-alpha)*theta)/Math.sin(theta);
-		let par2 = Math.sin(alpha*theta)/Math.sin(theta);
-
-		let res = [];
-		for (var i = 0; i < 4; i++) {
-			res[i] = a[i]*par1 + b[i]*par2;
-		}
-
-		return res;
-	}
-
 
 	//position interpolation
 	let bezX = bezier3(cx[0], cx[1], cx[2], cx[3], alpha);
 	let bezY = bezier3(cy[0], cy[1], cy[2], cy[3], alpha);
 	let bezZ = bezier3(cz[0], cz[1], cz[2], cz[3], alpha);
 
-	//quaternion interpolation
-	var q0 = [qw[0], qx[0], qy[0], qz[0]];
-	var q1 = [qw[1], qx[1], qy[1], qz[1]];
-	var q2 = [qw[2], qx[2], qy[2], qz[2]];
-	var q3 = [qw[3], qx[3], qy[3], qz[3]];
+	//quaternion interpolation; slerp function is in the quaternion.min.js
+    var q0 = new Quaternion(qw[0], qx[0], qy[0], qz[0]);
+	var q1 = new Quaternion(qw[1], qx[1], qy[1], qz[1]);
+	var q2 = new Quaternion(qw[2], qx[2], qy[2], qz[2]);
+	var q3 = new Quaternion(qw[3], qx[3], qy[3], qz[3]);
+    var q01 = q0.slerp(q1)(alpha);
+	var q12 = q1.slerp(q2)(alpha);
+	var q23 = q2.slerp(q3)(alpha);
+	var q012 = q01.slerp(q12)(alpha);
+	var q123 = q12.slerp(q23)(alpha);
+	var qtot = q012.slerp(q123)(alpha);
+	var rotation_mat = qtot.toMatrix4();
 
-	let bezQuat1 = slerp(q0, q1, alpha);
-	let bezQuat2 = slerp(q1, q2, alpha);
-	let bezQuat3 = slerp(q2, q3, alpha);
-
-	let bezQuat4 = slerp(bezQuat1, bezQuat2, alpha);
-	let bezQuat5 = slerp(bezQuat2, bezQuat3, alpha);
-	let bezQuat  = slerp(bezQuat4, bezQuat5, alpha);
-
-	var out =  utils.multiplyMatrices(utils.MakeTranslateMatrix(bezX, bezY, bezZ), new Quaternion(bezQuat).toMatrix4());
+	var out =  utils.multiplyMatrices(utils.MakeTranslateMatrix(bezX, bezY, bezZ), rotation_mat);
 	
 	return out;
 }
