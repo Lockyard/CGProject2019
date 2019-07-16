@@ -177,6 +177,11 @@ function initInteraction(){
         if (e.keyCode == 48) {  // 0
             n0_pressed = true
         }
+
+        //other fancy and useless commands:
+        if(e.keyCode == 72) { //h, change the type of primitive rendered
+            changeGlTypeElement()
+        }
         
     }
 

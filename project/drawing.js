@@ -12,6 +12,8 @@ var	shaderProgram;
 var shaderDir = "http://127.0.0.1:8887/shaders/";
 var modelsDir = "http://127.0.0.1:8887/assets/";
 
+var glTypeElement
+
 var perspectiveMatrix,
     viewMatrix;
 
@@ -109,6 +111,7 @@ function main(){
         gl.viewport(0.0, 0.0, w, h);
         gl.enable(gl.DEPTH_TEST);
         perspectiveMatrix = utils.MakePerspective(45, w/h, 0.1, 100.0);
+        glTypeElement = gl.TRIANGLES
 
         //Open the json file containing the 3D model to load,
         //parse it to retreive objects' data
@@ -524,7 +527,7 @@ function drawScene(){
         gl.enableVertexAttribArray(vertexUVHandle);
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBufferObjectId[i]);
-        gl.drawElements(gl.TRIANGLES, facesNumber[i] * 3, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(glTypeElement, facesNumber[i] * 3, gl.UNSIGNED_SHORT, 0);
 
         gl.disableVertexAttribArray(vertexPositionHandle);
         gl.disableVertexAttribArray(vertexNormalHandle);
@@ -553,4 +556,20 @@ function updateDelta() {
     t = Date.now()/1000.0
     delta = Math.min(t - prevT, MIN_DELTA)
     prevT = t
+}
+
+/**
+ * change the gl type primitve element to draw (POINTS, LINES, TRIANGLES)
+ */
+function changeGlTypeElement() {
+    switch(glTypeElement) {
+        case gl.LINES:
+            glTypeElement = gl.TRIANGLES
+            break
+        case gl.TRIANGLES:
+            glTypeElement = gl.LINES
+            break
+        default:
+            glTypeElement = gl.TRIANGLES
+    }
 }
