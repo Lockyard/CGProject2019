@@ -362,6 +362,7 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
                     if(this.alphaAnimation == 1.0) {
                         this.isInAnimation = false
                         this.keyhole.door.open()
+                        this.node.setParent(this.keyhole.node)
                         return
                     }
                     this.alphaAnimation = Math.min(1.0, this.alphaAnimation + delta*KEY_ALPHA_ANIM3_SPEED)
@@ -377,13 +378,20 @@ var Key = function(number, isPickedUp, type, x0, x1, y0, y1, z0, z1) {
             switch (this.keyhole.faceDirection) {
                 case 0: //north
                     this.x = this.keyhole.x
+                    this.y = this.keyhole.y
                     this.z = this.keyhole.z - KEY_ANIM2_OFFSET
+                    console.log("facedir:" + this.x + ", " + this.z)
                     break
                 case 3: //west
                     this.x = this.keyhole.x - KEY_ANIM2_OFFSET
+                    this.y = this.keyhole.y
                     this.z = this.keyhole.z
                     break
             }
+        } else if (animationNum == 3) {
+            this.x = this.keyhole.x
+            this.y = this.keyhole.y
+            this.z = this.keyhole.z
         }
     }
 }

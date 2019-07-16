@@ -4,6 +4,10 @@ const LEVER_ROT_ANGLE = 90.0 //degrees
 //4 states of animation of a lever
 const LEVER_ANIM_DEF = [0.0, -0.25, 0.1, 1.0]
 
+const KEY_TO_DOOR_ANIM_DEF = [0.0, 0.05, 0.15, 1.0]
+
+const KEY_ROTATING_ANIM_DEF = [0.0, -0.2, 0.08, 1.0]
+
 //arrays used only for animation
 var torchNodes = []
 
@@ -30,7 +34,7 @@ function bindNodeToKey(keyNum, node) {
 
 function bindNodeToKeyhole(keyholeNum, node) {
     for (let i = 0; i < keyholes.length; i++) {
-        if(keyholes[i].number == keyholeNum) {
+        if(keyholes[i].door.number == keyholeNum) {
             keyholes[i].node = node
         }
     }
@@ -70,16 +74,57 @@ function updateAnimations() {
                 let rotMatrix
                 let transAnimationMatrix
                 if(keys[i].keyhole.faceDirection == 0) { //north: rotate on x then y
-                    rotMatrix = utils.multiplyMatrices(utils.MakeRotateYMatrix(270.0), utils.MakeRotateXMatrix(90.0))
+                    rotMatrix = utils.multiplyMatrices(utils.MakeRotateYMatrix(90.0), utils.MakeRotateXMatrix(90.0))
+                    transAnimationMatrix = utils.MakeTranslateMatrix(   keys[i].x, keys[i].y,
+                                                                        Bezier3(    lerp(keys[i].z,keys[i].keyhole.z,KEY_TO_DOOR_ANIM_DEF[0]),
+                                                                                    lerp(keys[i].z,keys[i].keyhole.z,KEY_TO_DOOR_ANIM_DEF[1]),
+                                                                                    lerp(keys[i].z,keys[i].keyhole.z,KEY_TO_DOOR_ANIM_DEF[2]),
+                                                                                    lerp(keys[i].z,keys[i].keyhole.z,KEY_TO_DOOR_ANIM_DEF[3]),
+                                                                                    keys[i].alphaAnimation
+                                                                        ))
                 } else if(keys[i].keyhole.faceDirection == 3) { //north: rotate on x
                     rotMatrix = utils.MakeRotateXMatrix(90.0)
-                    
+                    transAnimationMatrix = utils.MakeTranslateMatrix(   Bezier3(    lerp(keys[i].x,keys[i].keyhole.x,KEY_TO_DOOR_ANIM_DEF[0]),
+                                                                                    lerp(keys[i].x,keys[i].keyhole.x,KEY_TO_DOOR_ANIM_DEF[1]),
+                                                                                    lerp(keys[i].x,keys[i].keyhole.x,KEY_TO_DOOR_ANIM_DEF[2]),
+                                                                                    lerp(keys[i].x,keys[i].keyhole.x,KEY_TO_DOOR_ANIM_DEF[3]),
+                                                                                    keys[i].alphaAnimation
+                                                                        ), 
+                                                                        keys[i].y, keys[i].z
+                                                                        )
                 }
                 else {//the other cases are not considered only because there are no doors facing 2 and 1. It should be done in general
                     rotMatrix = utils.identityMatrix()
                     transAnimationMatrix = utils.identityMatrix()
                 }
-                
+                zeroMatrix = utils.multiplyMatrices(rotMatrix, zeroMatrix)
+                keys[i].node.localMatrix = utils.multiplyMatrices(transAnimationMatrix, zeroMatrix)
+            }//animation 3, rotating in keyhole 
+            else if (keys[i].animationNum == 3) {
+                let zeroMatrix = utils.MakeTranslateMatrix(-keys[i].startX, -keys[i].startY, -keys[i].startZ)
+                let rotMatrix
+                let rotAniMatrix
+                if(keys[i].keyhole.faceDirection == 0) {
+                    rotMatrix = utils.multiplyMatrices(utils.MakeRotateYMatrix(90.0), utils.MakeRotateXMatrix(90.0))
+                    rotAniMatrix = BezierQuaternion(    new Quaternion(1.0, 0.0, 0.0, KEY_ROTATING_ANIM_DEF[0]), 
+                                                        new Quaternion(1.0, 0.0, 0.0, KEY_ROTATING_ANIM_DEF[1]),
+                                                        new Quaternion(1.0, 0.0, 0.0, KEY_ROTATING_ANIM_DEF[2]), 
+                                                        new Quaternion(1.0, 0.0, 0.0, KEY_ROTATING_ANIM_DEF[3]), 
+                                                        keys[i].alphaAnimation)
+                                    .toMatrix4();
+                }
+                else {
+                    rotMatrix = utils.MakeRotateXMatrix(90.0)
+                    rotAniMatrix = BezierQuaternion(    new Quaternion(1.0, KEY_ROTATING_ANIM_DEF[0], 0.0, 0.0), 
+                                                        new Quaternion(1.0, KEY_ROTATING_ANIM_DEF[1], 0.0, 0.0),
+                                                        new Quaternion(1.0, KEY_ROTATING_ANIM_DEF[2], 0.0, 0.0), 
+                                                        new Quaternion(1.0, KEY_ROTATING_ANIM_DEF[3], 0.0, 0.0), 
+                                                        keys[i].alphaAnimation)
+                                    .toMatrix4();
+                }
+
+                zeroMatrix = utils.multiplyMatrices(rotAniMatrix, utils.multiplyMatrices(rotMatrix, zeroMatrix))
+                keys[i].node.localMatrix = utils.multiplyMatrices(utils.MakeTranslateMatrix(keys[i].x, keys[i].y, keys[i].z), zeroMatrix)
             }
         }
     }
@@ -151,6 +196,9 @@ function Bezier3(x0, x1, x2, x3, alpha) {
     return lerp(x012, x123, alpha)
 }
 
+function lerp(x1, x2, alpha) {
+	return x1*(1-alpha) + x2*alpha
+}
 
 //performs a Bezier curve for quaternions using Quaternions objects
 function BezierQuaternion(q0, q1, q2, q3, alpha) {
