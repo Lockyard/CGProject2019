@@ -33,6 +33,11 @@ var angleIncrementH = 0, angleIncrementV = 0
 //increment for the spotlight's cone
 var coneOutIncrement = 0, coneInIncrement = 0
 
+const CONE_IN_INC_SPEED = 1.0
+const CONE_OUT_INC_SPEED = 100.0
+
+const COLOR_CHANGE_SPEED = 1.0
+
 
 
 
@@ -59,11 +64,23 @@ var ua_pressed = false;
 
 //others
 var shift_pressed = false;
+
 //for light parameters control
+//p and o: change target distance for light
 var p_pressed = false
 var o_pressed = false
+//l and k: change cone in and out of spotlight (this shouldn't be needed but mousewheel events sometime fails)
+var l_pressed = false
+var k_pressed = false
 
-
+//num 1, 2 and 3, to decrement r g b values
+var n1_pressed = false
+var n2_pressed = false
+var n3_pressed = false
+//num 8, 9 and 0, to increment r g b values
+var n8_pressed = false
+var n9_pressed = false
+var n0_pressed = false
 
 
 function initInteraction(){
@@ -117,8 +134,12 @@ function initInteraction(){
         }
 
         //light controls
-        if (e.keyCode == 32) {	// Space bar, change light type
-            changeToNextLight()
+        if (e.keyCode == 32) {	// Space bar, change light type. if shift is pressed, change to white light
+            if(shift_pressed) {
+                setLightColor(1.0, 1.0, 1.0)
+            } else {
+                changeToNextLight()
+            }
         }
         //change light target value 
         if (e.keyCode == 80) {  // p
@@ -127,21 +148,34 @@ function initInteraction(){
         if (e.keyCode == 79) {  // o
             o_pressed = true
         }
-
-
-
-
-        //controls for camSpeed
-        if (e.keyCode == 75) {  // k , player speed
-            camSpeed += 0.5
-            console.log("Cam Speed: " +camSpeed)
+        //change light cone in and out value
+        if (e.keyCode == 76) {  // l
+            l_pressed = true
         }
-        if(e.keyCode == 76) {   //l, log coordinates of camera
-            console.log("Cam position (X,Y,Z)(a,e): ("+cx+","+cy+","+cz+")("+angle+","+elevation+")")
+        if (e.keyCode == 75) {  // k
+            k_pressed = true
         }
-        if(e.keyCode == 74) {   //j, precision speed
-            camSpeed -= 0.5
-            console.log("Cam Speed: " +camSpeed)
+
+        //change light colors
+        //decrease
+        if (e.keyCode == 49) {  // 1
+            n1_pressed = true
+        }
+        if (e.keyCode == 50) {  // 2
+            n2_pressed = true
+        }
+        if (e.keyCode == 51) {  // 3
+            n3_pressed = true
+        }
+        //increase
+        if (e.keyCode == 56) {  // 8
+            n8_pressed = true
+        }
+        if (e.keyCode == 57) {  // 9
+            n9_pressed = true
+        }
+        if (e.keyCode == 48) {  // 0
+            n0_pressed = true
         }
         
     }
@@ -178,6 +212,36 @@ function initInteraction(){
         }
         if (e.keyCode == 79) {  // o
             o_pressed = false
+        }
+
+        //change light cone in and out value
+        if (e.keyCode == 76) {  // l
+            l_pressed = false
+        }
+        if (e.keyCode == 75) {  // k
+            k_pressed = false
+        }
+
+        //change light colors
+        //decrease
+        if (e.keyCode == 49) {  // 1
+            n1_pressed = false
+        }
+        if (e.keyCode == 50) {  // 2
+            n2_pressed = false
+        }
+        if (e.keyCode == 51) {  // 3
+            n3_pressed = false
+        }
+        //increase
+        if (e.keyCode == 56) {  // 8
+            n8_pressed = false
+        }
+        if (e.keyCode == 57) {  // 9
+            n9_pressed = false
+        }
+        if (e.keyCode == 48) {  // 0
+            n0_pressed = false
         }
 
 
@@ -236,7 +300,7 @@ function updateInput(delta) {
 
     updatePlayerVisual()
 
-    updateControlledLightParams()
+    updateControlledLightParams(delta)
 
     //wasd
     if (a_pressed) {  // a
@@ -319,14 +383,54 @@ function incrementPlayerVisual(angleH, angleV) {
 /**
  * Update parameters for the light controlled by the player
  */
-function updateControlledLightParams() {
+function updateControlledLightParams(delta) {
+    //o and p, for change light target
     if(o_pressed)
         lightTarget = utils.clamp(lightTarget - 0.25, LIGHT_TARGET_MIN, LIGHT_TARGET_MAX)
     else if (p_pressed)
         lightTarget = utils.clamp(lightTarget + 0.25, LIGHT_TARGET_MIN, LIGHT_TARGET_MAX)
 
-    lightConeOut = utils.clamp(lightConeOut + coneOutIncrement, CONE_OUT_MIN, CONE_OUT_MAX)
-    lightConeIn  = utils.clamp(lightConeIn + coneInIncrement, CONE_IN_MIN, CONE_IN_MAX)
+    //update light color channels
+    //1, 2, 3: decrease r g b
+    if(n1_pressed) {
+        lightColor[0] = utils.clamp(lightColor[0]-delta*COLOR_CHANGE_SPEED, 0.0, 1.0)
+    }
+    if(n2_pressed) {
+        lightColor[1] = utils.clamp(lightColor[1]-delta*COLOR_CHANGE_SPEED, 0.0, 1.0)
+    }
+    if(n3_pressed) {
+        lightColor[2] = utils.clamp(lightColor[2]-delta*COLOR_CHANGE_SPEED, 0.0, 1.0)
+    }
+    //8, 9, 0: increase r g b
+    if(n8_pressed) {
+        lightColor[0] = utils.clamp(lightColor[0]+delta*COLOR_CHANGE_SPEED, 0.0, 1.0)
+    }
+    if(n9_pressed) {
+        lightColor[1] = utils.clamp(lightColor[1]+delta*COLOR_CHANGE_SPEED, 0.0, 1.0)
+    }
+    if(n0_pressed) {
+        lightColor[2] = utils.clamp(lightColor[2]+delta*COLOR_CHANGE_SPEED, 0.0, 1.0)
+    }
+    
+    //change light cone in and out value
+    if (l_pressed) {  // l
+        if(shift_pressed) {
+            lightConeIn  = utils.clamp(lightConeIn + delta*CONE_IN_INC_SPEED, CONE_IN_MIN, CONE_IN_MAX)
+        } else {
+            lightConeOut = utils.clamp(lightConeOut + delta*CONE_OUT_INC_SPEED, CONE_OUT_MIN, CONE_OUT_MAX)
+        }
+    } else  if (k_pressed) {  // k
+        if(shift_pressed) {
+            lightConeIn  = utils.clamp(lightConeIn - delta*CONE_IN_INC_SPEED, CONE_IN_MIN, CONE_IN_MAX)
+        } else {
+            lightConeOut = utils.clamp(lightConeOut - delta*CONE_OUT_INC_SPEED, CONE_OUT_MIN, CONE_OUT_MAX)
+        }
+    }
+    //if nor l or k are pressed increment cones according to mousewheel event
+    else {
+        lightConeOut = utils.clamp(lightConeOut + coneOutIncrement, CONE_OUT_MIN, CONE_OUT_MAX)
+        lightConeIn  = utils.clamp(lightConeIn + coneInIncrement, CONE_IN_MIN, CONE_IN_MAX)
+    }
     coneInIncrement = 0
     coneOutIncrement = 0
 }
@@ -365,6 +469,17 @@ function turnOffInputs() {
 
     p_pressed = false
     o_pressed = false
+
+    l_pressed = false
+    k_pressed = false
+
+    n1_pressed = false
+    n2_pressed = false
+    n3_pressed = false
+
+    n8_pressed = false
+    n9_pressed = false
+    n0_pressed = false
 
     shift_pressed = false;
 

@@ -112,6 +112,16 @@ function changeToNextLight() {
     if(++currentLightType > LIGHT_TYPE_MAX) {
         currentLightType = LIGHT_TYPE_MIN
     }
+    switch (currentLightType) {
+        case 0:
+            document.getElementById("currentLightInfo").innerText = "Current Light: Light off"
+            break
+        case 1:
+            document.getElementById("currentLightInfo").innerText = "Current Light: Point light"
+            break
+        case 2:
+            document.getElementById("currentLightInfo").innerText = "Current Light: Spotlight"
+    }
 } 
 
 /**
@@ -181,5 +191,18 @@ function loadIlluminationParamsFromModel(loadedModel) {
             torchlightsPositions.push(position[2])
             n_torches++;
         }
+    }
+}
+
+/**
+ * Set the player's light. If no parameter is passed, set white
+ */
+function setLightColor(r, g, b) {
+    if(r) {
+        lightColor[0] = r
+        lightColor[1] = g
+        lightColor[2] = b
+    } else {
+        lightColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
     }
 }
