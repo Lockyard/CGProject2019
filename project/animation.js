@@ -104,7 +104,7 @@ function updateAnimations() {
                 let zeroMatrix = utils.MakeTranslateMatrix(-keys[i].startX, -keys[i].startY, -keys[i].startZ)
                 let rotMatrix
                 let rotAniMatrix
-                if(keys[i].keyhole.faceDirection == 0) {
+                if(keys[i].keyhole.faceDirection == 0) { //if keyhole faces north
                     rotMatrix = utils.multiplyMatrices(utils.MakeRotateYMatrix(90.0), utils.MakeRotateXMatrix(90.0))
                     rotAniMatrix = BezierQuaternion(    new Quaternion(1.0, 0.0, 0.0, KEY_ROTATING_ANIM_DEF[0]), 
                                                         new Quaternion(1.0, 0.0, 0.0, KEY_ROTATING_ANIM_DEF[1]),
@@ -113,7 +113,7 @@ function updateAnimations() {
                                                         keys[i].alphaAnimation)
                                     .toMatrix4();
                 }
-                else {
+                else if(keys[i].keyhole.faceDirection == 3){ //if keyhole faces west
                     rotMatrix = utils.MakeRotateXMatrix(90.0)
                     rotAniMatrix = BezierQuaternion(    new Quaternion(1.0, KEY_ROTATING_ANIM_DEF[0], 0.0, 0.0), 
                                                         new Quaternion(1.0, KEY_ROTATING_ANIM_DEF[1], 0.0, 0.0),
@@ -121,6 +121,9 @@ function updateAnimations() {
                                                         new Quaternion(1.0, KEY_ROTATING_ANIM_DEF[3], 0.0, 0.0), 
                                                         keys[i].alphaAnimation)
                                     .toMatrix4();
+                } else { //if keyhole faces other directions (not implemented because there are not. In general this should be done but it's just a matter of reusing bezier with opposite signs)
+                    rotMatrix = utils.identityMatrix()
+                    rotAniMatrix = utils.identityMatrix()
                 }
 
                 zeroMatrix = utils.multiplyMatrices(rotAniMatrix, utils.multiplyMatrices(rotMatrix, zeroMatrix))
