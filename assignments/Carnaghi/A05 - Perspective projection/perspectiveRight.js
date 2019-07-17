@@ -13,7 +13,7 @@ function perspective() {
 	var l = 0;
 	var r = 2*a*n*tgHalfFov;
 	
-	var out = [2*n/(r-l),				0.0,			(r+l)/(r-l),			0.0,
+	var out = [2*n/(r-l),			0.0,			(r+l)/(r-l),			0.0,
 			   0.0,					2*n/(t-b),		(t+b)/(t-b),			0.0,
 			   0.0,					0.0,			(f+n)/(n-f),			2*f*n/(n-f),
 			   0.0,					0.0,			-1,						0];

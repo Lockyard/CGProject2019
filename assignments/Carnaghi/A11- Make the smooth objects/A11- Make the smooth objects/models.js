@@ -111,6 +111,7 @@ function buildGeometry() {
 	let unitAngle = 2*Math.PI / slices3;
 	let coneHeight = 2.0;
 	let radius = 1.0;
+	//mod = sqrt(cos^2 + sin^2 + tg^2) modulus for the 3d vector used for normalizing normals
 	mod = Math.sqrt(1.0 + Math.pow(radius/coneHeight, 2));
 	
 	for(i = 0; i < slices3; i++) {
@@ -155,6 +156,7 @@ function buildGeometry() {
 	let alphaV;
 	let alphaShifter; //= 1/2 alphaH every 2 rows of points
 	let indPointer = 0;
+	//calculate vertical alpha according to number of slices and even mode or not
 	if(evenMode) {
 		alphaV = slices4 % 2 == 0 ? alphaH : 2*Math.PI/(slices4+1);
 	} else {
@@ -187,7 +189,7 @@ function buildGeometry() {
 			norm4[slices4*i+j+1] = vert4[slices4*i+j+1];
 
 			if(evenRound) {
-				ind4[indPointer++] 		= i*slices4+j+1;	//itself
+				ind4[indPointer++] 	= i*slices4+j+1;	//itself
 				ind4[indPointer++] 	= j > 0 ? (i-1)*slices4+j 	: i*slices4;	//its previous on the last cycle
 				ind4[indPointer++] 	= (i-1)*slices4+j+1; //itself but on the previous circle.
 				
